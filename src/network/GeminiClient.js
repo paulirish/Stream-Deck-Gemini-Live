@@ -1,6 +1,15 @@
 /**
  * Manages the connection to the Gemini Multimodal Live API using @google/genai SDK.
  */
+
+/** @typedef {import("https://esm.run/@google/genai").GoogleGenAI} GoogleGenAI */
+/** @typedef {import("https://esm.run/@google/genai").GenerativeModel} GenerativeModel */
+/** @typedef {import("https://esm.run/@google/genai").ChatSession} ChatSession */
+/** @typedef {import("https://esm.run/@google/genai").BidiGenerateContentResponse} BidiGenerateContentResponse */
+/** @typedef {import("https://esm.run/@google/genai").ConnectLiveSessionRequest} ConnectLiveSessionRequest */
+/** @typedef {import("https://esm.run/@google/genai").LiveSessionCallbacks} LiveSessionCallbacks */
+/** @typedef {import("https://esm.run/@google/genai").RealtimeInput} RealtimeInput */
+
 import { GoogleGenAI } from "https://esm.run/@google/genai";
 
 export class GeminiClient extends EventTarget {
@@ -51,7 +60,12 @@ export class GeminiClient extends EventTarget {
                         voiceName: config.voiceName || 'Puck'
                     }
                 }
-            }
+            },
+            // Enable transcription
+            // The model field is required for transcription config in some versions
+            // Using gemini-2.0-flash-exp as the transcription model
+             inputAudioTranscription: { model: "gemini-2.0-flash-exp" }, 
+             outputAudioTranscription: { model: "gemini-2.0-flash-exp" } 
         };
 
         if (config.systemInstruction) {
@@ -130,8 +144,13 @@ export class GeminiClient extends EventTarget {
                         this.dispatchEvent(new CustomEvent('audiooutput', { detail: pcmData }));
                     }
                     if (part.text) {
+                        // If we are getting explicit outputTranscription, this text might be "thoughts".
+                        // We will emit it as 'thought' or 'transcription' depending on what we find.
+                        // For now, let's keep it as transcription but maybe log it differently?
+                        // Or if we find outputTranscription, we can ignore this?
+                        // Let's emit it as 'thought' to be safe if the user suspects it's thoughts.
                          this.dispatchEvent(new CustomEvent('transcription', { 
-                             detail: { role: 'model', text: part.text } 
+                             detail: { role: 'model_thought', text: part.text } 
                          }));
                     }
                 }
@@ -141,6 +160,29 @@ export class GeminiClient extends EventTarget {
                 this.dispatchEvent(new Event('turncomplete'));
             }
         }
+        
+        // Handle explicit transcription fields if present (based on user hint)
+        // These fields are likely available when inputAudioTranscription/outputAudioTranscription configs are set.
+        
+        if (serverContent) {
+            // Input Transcription (User)
+            // Note: Field name based on user hint "inputTranscription"
+            if (serverContent.inputTranscription) {
+                 this.dispatchEvent(new CustomEvent('transcription', { 
+                     detail: { role: 'user', text: serverContent.inputTranscription } 
+                 }));
+            }
+            
+            // Output Transcription (Model)
+            // Note: Field name based on user hint "outputTranscription"
+            if (serverContent.outputTranscription) {
+                 this.dispatchEvent(new CustomEvent('transcription', { 
+                     detail: { role: 'model', text: serverContent.outputTranscription } 
+                 }));
+            }
+        }
+        
+        // Handle tool calls/responses if any?
 
         // Handle Usage Metadata
         // It might be on the message object directly in some SDK versions
