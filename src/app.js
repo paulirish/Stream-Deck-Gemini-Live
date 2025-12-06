@@ -287,9 +287,9 @@ class StreamDeckGeminiApp {
         
      
         const tokenString = `
-        Prompt:   ${usage.promptTokensDetails.map(t => `${t.modality.toLowerCase()}: ${t.tokenCount.toLocaleString().padStart(9    )}`).join(', ')}
-        Response: ${usage.responseTokensDetails.map(t => `${t.modality.toLowerCase()}: ${t.tokenCount.toLocaleString().padStart(9)}`).join(', ')}
-        Total:    ${usage.totalTokenCount.toLocaleString().padStart(9)}
+        Prompt   : ${usage.promptTokensDetails.map(t => `${t.tokenCount.toLocaleString().padStart(9)} (${t.modality.toLowerCase()})`).join(', ')}
+        Response : ${usage.responseTokensDetails.map(t => `${t.tokenCount.toLocaleString().padStart(9)} (${t.modality.toLowerCase()})`).join(', ')}
+        Total    : ${usage.totalTokenCount.toLocaleString().padStart(9)}
         `;
         
         // see pricing-deets.md 
