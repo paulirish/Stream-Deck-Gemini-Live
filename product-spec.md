@@ -1,7 +1,3 @@
-This is a comprehensive Product Specification for the **Stream Deck Gemini Live WebApp**. You can hand this directly to a coding agent or developer to build the application.
-
------
-
 # Product Specification: Stream Deck Gemini Live WebApp
 
 ## 1\. Executive Summary
@@ -11,7 +7,7 @@ A browser-based single-page application (SPA) that interfaces directly with an E
 ## 2\. Technical Architecture
 
   * **Platform:** Web Application (Chrome/Edge/Opera only due to WebHID support).
-  * **Framework:** Vanilla JS or React (Vite recommended for fast setup).
+  * **Framework:** Vanilla JS.
   * **Core APIs:**
       * **WebHID API:** For direct communication with the Stream Deck hardware (no local server/Node.js required).
       * **WebSockets:** For bidirectional streaming audio/JSON to Gemini Live API.
@@ -19,8 +15,13 @@ A browser-based single-page application (SPA) that interfaces directly with an E
 
 ## 3\. Hardware Interface (Stream Deck)
 
-**Library:** `@elgato-stream-deck/webhid`
-**Device Support:** Must support standard device discovery loop (Original, MK.2, Mini, XL).
+WebHID browser API.
+
+see these:
+
+https://raw.githubusercontent.com/petele/StreamDeck-Meet/refs/heads/main/src/StreamDeck.js
+https://raw.githubusercontent.com/petele/StreamDeck-Meet/refs/heads/main/src/StreamDeckV2.js
+
 
 ### Button Mapping
 
@@ -33,7 +34,7 @@ The application will map two specific keys on the Stream Deck (configurable inde
 
 ### Visual Feedback System
 
-  * **Canvas Rendering:** Icons must be generated dynamically using an HTML Canvas (offscreen), then converted to the byte buffer format required by the Stream Deck.
+  * **Canvas Rendering:** Icons must be generated dynamically using an HTML Canvas (offscreen), then converted to the byte buffer format required by the Stream Deck.  see https://raw.githubusercontent.com/petele/StreamDeck-Meet/refs/heads/main/src/CanvasToBMP.js but also consider using OffscreenCanvas.
   * **State Management:** The buttons must strictly reflect the *application state*, not just the physical press.
       * *Example:* If the WebSocket disconnects, the buttons should turn "Yellow/Error" or flash.
 
@@ -94,18 +95,23 @@ Since the primary controller is the hardware, the screen UI is for configuration
       * **API Key Input:** (Masked, save to `localStorage`).
       * **Device Selector:** Dropdown for Microphone and Speaker (uses `enumerateDevices`).
       * **Stream Deck Status:** "Device Connected" (Green/Red).
-  * **Logs/Transcript:** A scrolling text div showing the conversation transcript (User text vs Model text) for debugging and history.
+  * **Logs/Transcript:** A scrolling text div showing the conversation transcript (User text vs Model text) and communication metadata (for debugging and history.
 
 ## 7\. Implementation Roadmap for Coding Agent
 
-1.  **Scaffold:** Create Vite app (vanilla-ts) and install `@elgato-stream-deck/webhid`.
 2.  **Hardware Connection:** Implement the "Connect Device" button and basic "Fill Key Red/Green" test.
 3.  **Audio Engine:** Implement `AudioContext` setup with `echoCancellation` and the PCM conversion utils (Float32 \<-\> Int16).
-4.  **Network Layer:** Build the `GeminiClient` class handling WebSocket handshake and message parsing.
+4.  **Network Layer:** Build the `GeminiClient` class handling WebSocket handshake and message parsing. 
 5.  **Integration:** Wire the Stream Deck `keydown` events to trigger the `GeminiClient` streaming methods.
+
+As this is a complicated setup and pipeline.. the architecture be modular enough to support unit tests of the various components.  We'll need unit tests written for them as well.  Let's use mocha in the browser to do tests. Chai for assertions works.
+
+Use JavaScript with jsdoc types. We'll use typescript to with checkJs to catch errors.
+
 
 ## 8\. Reference Material
 
   * **Stream Deck WebHID Demo:** `https://julusian.github.io/node-elgato-stream-deck/` (View Source for connection logic).
   * **Gemini Live API Docs:** Reference the `BidiGenerateContent` WebSocket protocols.
   * **Inspiration:** `https://github.com/petele/StreamDeck-Meet` (Specifically look at how they manage connection resilience).
+
