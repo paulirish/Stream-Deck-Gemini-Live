@@ -1,3 +1,6 @@
+import {StreamDeckV2} from './streamdeckv2.js';
+
+
 describe('StreamDeckV2 Library', () => {
   let sd;
   let mockDevice;

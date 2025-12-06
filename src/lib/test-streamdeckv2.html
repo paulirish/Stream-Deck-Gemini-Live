@@ -22,8 +22,6 @@
  <script src="https://unpkg.com/chai@4/chai.js"></script>
     <script src="https://unpkg.com/mocha/mocha.js"></script>
 
-    <!-- Library under test -->
-    <script src="streamdeckv2.js"></script>
 
     <script class="mocha-init">
         mocha.setup('bdd');
@@ -31,9 +29,10 @@
         const expect = chai.expect;
     </script>
 
-    <script src="streamdeckv2.test.js"></script>
+    <script src="streamdeckv2.test.js" type="module"></script>
 
-    <script>
+    <script type="module">
+        import {StreamDeckV2} from './streamdeckv2.js';
         // Separate script for the manual trigger to keep test file clean-ish or just inline it here for simplicity
         const sdManual = new StreamDeckV2();
         document.getElementById('connect-btn').addEventListener('click', async () => {
