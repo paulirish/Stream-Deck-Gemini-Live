@@ -61,11 +61,9 @@ export class GeminiClient extends EventTarget {
                     }
                 }
             },
-            // Enable transcription
-            // The model field is required for transcription config in some versions
-            // Using gemini-2.0-flash-exp as the transcription model
-             inputAudioTranscription: { model: "gemini-2.0-flash-exp" }, 
-             outputAudioTranscription: { model: "gemini-2.0-flash-exp" } 
+            // Enable transcription with an empty object.
+             inputAudioTranscription: { }, 
+             outputAudioTranscription: {  } 
         };
 
         if (config.systemInstruction) {
@@ -89,7 +87,7 @@ export class GeminiClient extends EventTarget {
                         this.dispatchEvent(new CustomEvent('error', { detail: e }));
                     },
                     onclose: (e) => {
-                        console.debug('Session Closed:', e);
+                        console.log('Session Closed:', e.reason, e);
                         this.isConnected = false;
                         this.dispatchEvent(new Event('close'));
                     }
@@ -165,19 +163,15 @@ export class GeminiClient extends EventTarget {
         // These fields are likely available when inputAudioTranscription/outputAudioTranscription configs are set.
         
         if (serverContent) {
-            // Input Transcription (User)
-            // Note: Field name based on user hint "inputTranscription"
             if (serverContent.inputTranscription) {
                  this.dispatchEvent(new CustomEvent('transcription', { 
-                     detail: { role: 'user', text: serverContent.inputTranscription } 
+                     detail: { role: 'user', text: serverContent.inputTranscription.text } 
                  }));
             }
             
-            // Output Transcription (Model)
-            // Note: Field name based on user hint "outputTranscription"
             if (serverContent.outputTranscription) {
                  this.dispatchEvent(new CustomEvent('transcription', { 
-                     detail: { role: 'model', text: serverContent.outputTranscription } 
+                     detail: { role: 'model', text: serverContent.outputTranscription.text } 
                  }));
             }
         }

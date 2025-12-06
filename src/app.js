@@ -151,7 +151,7 @@ class StreamDeckGeminiApp {
 
         this.geminiClient.addEventListener('transcription', (e) => {
             const { role, text } = /** @type {CustomEvent} */(e).detail;
-            this.log(`${role === 'user' ? 'User' : 'Gemini'}: ${text}`);
+            this.log(`${role}: ${text}`);
         });
 
         this.geminiClient.addEventListener('usage', (e) => {
@@ -233,13 +233,6 @@ class StreamDeckGeminiApp {
                 connectBtn.textContent = 'Disconnect Gemini';
                 connectBtn.disabled = false;
                 this.log('Gemini Connected');
-                
-                // Initialize Audio if not already done (it might be done in StreamDeck connection, but good to ensure)
-                const micSelect = /** @type {HTMLSelectElement} */ (document.getElementById('mic-select'));
-                if (micSelect.value) {
-                    await this.audioManager.initialize(micSelect.value);
-                }
-
             } catch (e) {
                 this.log('Gemini Connection Failed');
                 console.error(e);
