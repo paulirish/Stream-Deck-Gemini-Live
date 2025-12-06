@@ -5,6 +5,7 @@
     --status-disconnected: #e74c3c;
     --status-connected: #f1c40f;
     --status-live: #2ecc71;
+    --disconnect-button-color: #673ab7;
 }
 
 body {
@@ -70,6 +71,10 @@ button {
 
 button:hover {
     opacity: 0.9;
+}
+
+button.disconnect-active {
+    background-color: var(--disconnect-button-color);
 }
 
 #transcript-log {

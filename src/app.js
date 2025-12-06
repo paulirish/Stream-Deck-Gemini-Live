@@ -28,6 +28,7 @@ class StreamDeckGeminiApp {
         await this.setupAudio();
         // Auto-connect Stream Deck if possible
         this.tryAutoConnect();
+        this.tryAutoConnectGemini();
     }
 
     async tryAutoConnect() {
@@ -38,6 +39,15 @@ class StreamDeckGeminiApp {
             }
         } catch (e) {
             console.log('Auto-connect failed:', e);
+        }
+    }
+
+    async tryAutoConnectGemini() {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (apiKey) {
+            // Wait for the UI to be fully set up before attempting connection
+            await new Promise(resolve => setTimeout(resolve, 100)); 
+            this.toggleGeminiConnection();
         }
     }
 
@@ -146,12 +156,24 @@ class StreamDeckGeminiApp {
         this.geminiClient.addEventListener('close', () => {
             this.log('Disconnected from Gemini');
             this.state.geminiConnected = false;
-            connectGeminiBtn.textContent = 'Connect Gemini';
+            const connectGeminiBtn = document.getElementById('connect-gemini');
+            if (connectGeminiBtn) {
+                connectGeminiBtn.textContent = 'Connect Gemini';
+                connectGeminiBtn.classList.remove('disconnect-active');
+            }
         });
 
         this.geminiClient.addEventListener('transcription', (e) => {
             const { role, text } = /** @type {CustomEvent} */(e).detail;
-            this.log(`${role}: ${text}`);
+            const transcript = document.getElementById('transcript-log');
+            const lastEntry = transcript.lastElementChild;
+
+            if (lastEntry && lastEntry.textContent.includes(`] ${role}: `)) {
+                lastEntry.textContent += text;
+                transcript.scrollTop = transcript.scrollHeight;
+            } else {
+                this.log(`${role}: ${text}`);
+            }
         });
 
         this.geminiClient.addEventListener('usage', (e) => {
@@ -180,6 +202,7 @@ class StreamDeckGeminiApp {
                 await this.deck.disconnect();
                 this.state.connected = false;
                 connectBtn.textContent = 'Connect Stream Deck';
+                connectBtn.classList.remove('disconnect-active');
                 this.updateStatus('Disconnected', 'disconnected');
                 this.log('Stream Deck Disconnected');
             } catch (error) {
@@ -208,38 +231,40 @@ class StreamDeckGeminiApp {
 
         if (this.state.geminiConnected) {
             // Disconnect
-            this.geminiClient.disconnect();
-            // The 'close' event listener will handle state update and UI text
-        } else {
-            // Connect
-            if (!apiKey) {
-                this.log('Please enter a Gemini API Key');
-                return;
-            }
-
-            const voiceSelect = /** @type {HTMLSelectElement} */ (document.getElementById('voice-select'));
-            const config = {
-                model: this.geminiClient.model,
-                voiceName: voiceSelect.value,
-                systemInstruction: "You are a helpful voice assistant."
-            };
-
-            try {
-                connectBtn.textContent = 'Connecting...';
-                connectBtn.disabled = true;
-                
-                await this.geminiClient.connect(apiKey, config);
-                this.state.geminiConnected = true;
-                connectBtn.textContent = 'Disconnect Gemini';
-                connectBtn.disabled = false;
-                this.log('Gemini Connected');
-            } catch (e) {
-                this.log('Gemini Connection Failed');
-                console.error(e);
-                connectBtn.textContent = 'Connect Gemini';
-                connectBtn.disabled = false;
-            }
-        }
+                            this.geminiClient.disconnect();
+                            connectBtn.classList.remove('disconnect-active');
+                            // The 'close' event listener will handle state update and UI text
+                        } else {
+                            // Connect
+                            if (!apiKey) {
+                                this.log('Please enter a Gemini API Key');
+                                return;
+                            }
+            
+                            const voiceSelect = /** @type {HTMLSelectElement} */ (document.getElementById('voice-select'));
+                            const config = {
+                                model: this.geminiClient.model,
+                                voiceName: voiceSelect.value,
+                                systemInstruction: "You are a helpful voice assistant."
+                            };
+            
+                            try {
+                                connectBtn.textContent = 'Connecting...';
+                                connectBtn.disabled = true;
+            
+                                await this.geminiClient.connect(apiKey, config);
+                                this.state.geminiConnected = true;
+                                connectBtn.textContent = 'Disconnect Gemini';
+                                connectBtn.classList.add('disconnect-active');
+                                connectBtn.disabled = false;
+                                this.log('Gemini Connected');
+                            } catch (e) {
+                                this.log('Gemini Connection Failed');
+                                console.error(e);
+                                connectBtn.textContent = 'Connect Gemini';
+                                connectBtn.classList.remove('disconnect-active');
+                                connectBtn.disabled = false;
+                            }        }
     }
 
     // async loadModels(apiKey) {
@@ -287,6 +312,7 @@ class StreamDeckGeminiApp {
     async onStreamDeckConnected() {
         const connectDeckBtn = document.getElementById('connect-streamdeck');
         connectDeckBtn.textContent = 'Disconnect Stream Deck';
+        connectDeckBtn.classList.add('disconnect-active');
 
         // Initialize Audio
         const micSelect = /** @type {HTMLSelectElement} */ (document.getElementById('mic-select'));
