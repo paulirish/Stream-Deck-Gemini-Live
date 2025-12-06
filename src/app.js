@@ -295,23 +295,23 @@ class StreamDeckGeminiApp {
         // see pricing-deets.md 
 
         // // Live API (2.5-flash-native-audio-preview-09-2025)
-        // const inputTextCost = (usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000)    * 0.50;
-        // const outputTextCost = (usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000) * 2.00;
-        // const inputAudioCost = (usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000)    * 3.00;
-        // const outputAudioCost = (usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000) * 12.00;
+        // const inputTextCost = ((usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000)    * 0.50;
+        // const outputTextCost = ((usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000) * 2.00;
+        // const inputAudioCost = ((usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000)    * 3.00;
+        // const outputAudioCost = ((usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000) * 12.00;
 
         // gemini-2.0-flash-live-001
-        const inputTextCost = (usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000)    * 0.35;
-        const outputTextCost = (usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000) * 1.50;
-        const inputAudioCost = (usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000)    * 2.10;
-        const outputAudioCost = (usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000) * 8.50;
+        const inputTextCost = ((usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000)    * 0.35;
+        const outputTextCost = ((usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000) * 1.50;
+        const inputAudioCost = ((usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000)    * 2.10;
+        const outputAudioCost = ((usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000) * 8.50;
 
         const totalCost = inputTextCost + outputTextCost + inputAudioCost + outputAudioCost;
 
         const countEl = document.getElementById('token-count');
         const costEl = document.getElementById('cost-estimate');
 
-        const formattedValue = Intl.NumberFormat('en', {currency: 'USD', style: 'currency'}).format(totalCost);
+        const formattedValue = Intl.NumberFormat('en', {currency: 'USD', style: 'currency', minimumFractionDigits: 4}).format(totalCost);
         
         if (countEl) countEl.textContent = tokenString;
         if (costEl) costEl.textContent = formattedValue;
@@ -351,43 +351,77 @@ class StreamDeckGeminiApp {
         if (!this.state.connected) return;
 
         const previewContainer = document.getElementById('key-previews');
-        previewContainer.innerHTML = ''; // Clear previous
+        // Removed: previewContainer.innerHTML = ''; 
 
         // Key 0: PTT (Mic)
         const micState = this.state.isPTTActive ? 'active' : 'idle';
         const micIcon = await this.iconGenerator.createIcon('mic', micState);
         await this.deck.fillBuffer(0, micIcon.buffer);
-        this.addPreview(previewContainer, micIcon.blob, 'Push To Talk');
+        this.updateButtonVisuals(previewContainer, 0, micIcon.blob, 'Push To Talk');
 
         // Key 1: Toggle (Bubble)
         const toggleState = this.state.isToggleActive ? 'active' : 'idle';
         const toggleIcon = await this.iconGenerator.createIcon('bubble', toggleState);
         await this.deck.fillBuffer(1, toggleIcon.buffer);
-        this.addPreview(previewContainer, toggleIcon.blob, 'Toggle Mic');
+        this.updateButtonVisuals(previewContainer, 1, toggleIcon.blob, 'Toggle Mic');
     }
 
-    addPreview(container, blob, label) {
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.flexDirection = 'column';
-        wrapper.style.alignItems = 'center';
+    updateButtonVisuals(container, keyIndex, blob, label) {
+        let wrapper = container.querySelector(`[data-key="${keyIndex}"]`);
         
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(blob);
-        img.style.width = '72px';
-        img.style.height = '72px';
-        img.style.border = '1px solid #555';
-        img.style.borderRadius = '8px';
-        
-        const text = document.createElement('span');
-        text.textContent = label;
-        text.style.fontSize = '12px';
-        text.style.marginTop = '4px';
-        text.style.color = '#ccc';
+        if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.dataset.key = String(keyIndex);
+            wrapper.style.display = 'flex';
+            wrapper.style.flexDirection = 'column';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.cursor = 'pointer'; 
+            wrapper.style.userSelect = 'none'; 
+            wrapper.style.webkitUserSelect = 'none';
+            // Add slight hover effect via style or class? 
+            // Inline style is easiest for now
+            wrapper.onmouseover = () => wrapper.style.opacity = '0.8';
+            wrapper.onmouseout = () => wrapper.style.opacity = '1.0';
 
-        wrapper.appendChild(img);
-        wrapper.appendChild(text);
-        container.appendChild(wrapper);
+            const img = document.createElement('img');
+            img.style.width = '72px';
+            img.style.height = '72px';
+            img.style.border = '1px solid #555';
+            img.style.borderRadius = '8px';
+            
+            const text = document.createElement('span');
+            text.style.fontSize = '12px';
+            text.style.marginTop = '4px';
+            text.style.color = '#ccc';
+
+            wrapper.appendChild(img);
+            wrapper.appendChild(text);
+            container.appendChild(wrapper);
+
+            this.attachButtonListeners(wrapper, keyIndex);
+        }
+
+        const img = wrapper.querySelector('img');
+        const text = wrapper.querySelector('span');
+        
+        img.src = URL.createObjectURL(blob);
+        text.textContent = label;
+    }
+
+    attachButtonListeners(element, keyIndex) {
+        element.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.handleButtonPress(keyIndex, true);
+        });
+        
+        element.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            this.handleButtonPress(keyIndex, false);
+        });
+        
+        element.addEventListener('pointerleave', (e) => {
+             this.handleButtonPress(keyIndex, false);
+        });
     }
 
     log(message) {
