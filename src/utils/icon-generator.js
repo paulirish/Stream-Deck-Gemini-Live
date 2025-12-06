@@ -3,7 +3,7 @@ export class IconGenerator {
         this.size = 72;
     }
 
-    createIcon(type, state) {
+    async createIcon(type, state) {
         const canvas = new OffscreenCanvas(this.size, this.size);
         const ctx = canvas.getContext('2d');
 
@@ -16,36 +16,19 @@ export class IconGenerator {
         ctx.fillRect(0, 0, this.size, this.size);
 
         // Icon Style
-        let color = '#555555'; // Default Gray
-        let iconChar = '?';
-
-        if (type === 'ptt') {
-            iconChar = '🎤'; // Mic
-            if (state === 'active') {
-                color = '#ff0000'; // Red
-            }
-        } else if (type === 'toggle') {
-            iconChar = '💬'; // Bubble
-            if (state === 'active') {
-                color = '#00ff00'; // Green
-            }
-        }
-
-        // Draw Icon
-        ctx.fillStyle = color;
-        ctx.font = '40px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '30px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        
+        // Draw Icon (Simple Text for now)
+        const iconChar = type === 'mic' ? '🎤' : '💬';
         ctx.fillText(iconChar, this.size / 2, this.size / 2);
 
-        // Add border/indicator for active state
-        if (state === 'active') {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 4;
-            ctx.strokeRect(2, 2, this.size - 4, this.size - 4);
-        }
-
-        return canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 })
-            .then(blob => blob.arrayBuffer());
+        const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 });
+        const buffer = await blob.arrayBuffer();
+        
+        // Return both buffer (for device) and blob (for UI)
+        return { buffer, blob };
     }
 }

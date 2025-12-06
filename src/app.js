@@ -205,13 +205,44 @@ class StreamDeckGeminiApp {
     async updateIcons() {
         if (!this.state.connected) return;
 
-        // PTT Icon
-        const pttBuffer = await this.iconGenerator.createIcon('ptt', this.state.pttActive ? 'active' : 'idle');
-        await this.streamDeckManager.setKeyImage(0, pttBuffer);
+        const previewContainer = document.getElementById('key-previews');
+        previewContainer.innerHTML = ''; // Clear previous
 
-        // Toggle Icon
-        const toggleBuffer = await this.iconGenerator.createIcon('toggle', this.state.toggleActive ? 'active' : 'idle');
-        await this.streamDeckManager.setKeyImage(1, toggleBuffer);
+        // Key 0: PTT (Mic)
+        const micState = this.state.pttActive ? 'active' : 'idle';
+        const micIcon = await this.iconGenerator.createIcon('mic', micState);
+        await this.streamDeckManager.setKeyImage(0, micIcon.buffer);
+        this.addPreview(previewContainer, micIcon.blob, 'PTT');
+
+        // Key 1: Toggle (Bubble)
+        const toggleState = this.state.toggleActive ? 'active' : 'idle';
+        const toggleIcon = await this.iconGenerator.createIcon('bubble', toggleState);
+        await this.streamDeckManager.setKeyImage(1, toggleIcon.buffer);
+        this.addPreview(previewContainer, toggleIcon.blob, 'Toggle');
+    }
+
+    addPreview(container, blob, label) {
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.alignItems = 'center';
+        
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(blob);
+        img.style.width = '72px';
+        img.style.height = '72px';
+        img.style.border = '1px solid #555';
+        img.style.borderRadius = '8px';
+        
+        const text = document.createElement('span');
+        text.textContent = label;
+        text.style.fontSize = '12px';
+        text.style.marginTop = '4px';
+        text.style.color = '#ccc';
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(text);
+        container.appendChild(wrapper);
     }
 
     log(message) {
