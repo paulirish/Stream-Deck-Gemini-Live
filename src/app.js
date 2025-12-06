@@ -1,21 +1,23 @@
-import { StreamDeckManager } from './managers/StreamDeckManager.js';
-import { IconGenerator } from './utils/icon-generator.js';
+
+// @ts-ignore
+import { StreamDeckV2 } from './lib/streamdeckv2.js';
 import { AudioManager } from './managers/AudioManager.js';
 import { GeminiClient } from './network/GeminiClient.js';
+import { IconGenerator } from './utils/icon-generator.js';
 
 class StreamDeckGeminiApp {
     constructor() {
-        this.streamDeckManager = new StreamDeckManager();
-        this.iconGenerator = new IconGenerator();
+        this.deck = new StreamDeckV2();
         this.audioManager = new AudioManager();
         this.geminiClient = new GeminiClient();
+        this.iconGenerator = new IconGenerator();
         
         // App State
         this.state = {
-            pttActive: false,
-            toggleActive: false,
             connected: false,
-            geminiConnected: false
+            geminiConnected: false,
+            isPTTActive: false,
+            isToggleActive: false
         };
 
         this.init();
@@ -30,7 +32,7 @@ class StreamDeckGeminiApp {
 
     async tryAutoConnect() {
         try {
-            const connected = await this.streamDeckManager.autoConnect();
+            const connected = await this.deck.connect(false); // false = no picker
             if (connected) {
                 this.onStreamDeckConnected();
             }
@@ -91,7 +93,8 @@ class StreamDeckGeminiApp {
         // Debug Mode Toggle
         if (debugCheckbox) {
             debugCheckbox.addEventListener('change', () => {
-                this.streamDeckManager.debugMode = debugCheckbox.checked;
+                // StreamDeckV2 doesn't have a public debugMode property, 
+                // but we can log events manually if needed.
                 this.log(`Debug Mode: ${debugCheckbox.checked ? 'ON' : 'OFF'}`);
             });
         }
@@ -105,7 +108,9 @@ class StreamDeckGeminiApp {
                 localStorage.setItem('gemini_api_key', apiKey);
 
                 // Connect Stream Deck
-                await this.streamDeckManager.connect();
+                const connected = await this.deck.connect(true); // true = show picker
+                if (!connected) throw new Error('Device selection cancelled');
+                
                 this.onStreamDeckConnected();
             } catch (error) {
                 console.error('Connection failed:', error);
@@ -115,8 +120,8 @@ class StreamDeckGeminiApp {
         });
 
         // Listen for Stream Deck events
-        this.streamDeckManager.addEventListener('keydown', (e) => this.handleButtonPress(/** @type {CustomEvent} */(e).detail.keyIndex, true));
-        this.streamDeckManager.addEventListener('keyup', (e) => this.handleButtonPress(/** @type {CustomEvent} */(e).detail.keyIndex, false));
+        this.deck.addEventListener('keydown', (e) => this.handleButtonPress(/** @type {CustomEvent} */(e).detail.buttonId, true));
+        this.deck.addEventListener('keyup', (e) => this.handleButtonPress(/** @type {CustomEvent} */(e).detail.buttonId, false));
 
         // Listen for Audio Input (Mic -> Gemini)
         this.audioManager.addEventListener('audioinput', (e) => {
@@ -159,6 +164,14 @@ class StreamDeckGeminiApp {
         this.state.connected = true;
         this.updateStatus('Connected & Live', 'live');
         
+        // Reset and Clear
+        try {
+            await this.deck.reset();
+            await this.deck.clearAllButtons();
+        } catch (e) {
+            console.warn('Stream Deck Reset/Clear failed:', e);
+        }
+
         await this.updateIcons();
         this.log('System Connected');
     }
@@ -173,30 +186,28 @@ class StreamDeckGeminiApp {
     async handleButtonPress(keyIndex, isDown) {
         if (!this.state.connected) return;
 
-        this.log(`Key ${keyIndex} ${isDown ? 'Down' : 'Up'}`);
-
         // Key 0: Push-to-Talk
         if (keyIndex === 0) {
-            this.state.pttActive = isDown;
+            this.state.isPTTActive = isDown;
             if (isDown) {
                 this.audioManager.startStreaming();
+                this.log('PTT Active (Listening...)');
             } else {
                 this.audioManager.stopStreaming();
-                // Send empty message or specific end signal if needed, 
-                // but usually stopping audio is enough for PTT if we rely on VAD or just silence.
-                // Actually, for PTT, we might want to explicitly commit.
-                // But Gemini Live is continuous. Stopping audio input is effectively "done speaking".
+                this.log('PTT Inactive');
             }
             await this.updateIcons();
         }
 
-        // Key 1: Toggle
-        if (keyIndex === 1 && isDown) {
-            this.state.toggleActive = !this.state.toggleActive;
-            if (this.state.toggleActive) {
+        // Key 1: Toggle Mic
+        if (keyIndex === 1 && isDown) { // Toggle on press down
+            this.state.isToggleActive = !this.state.isToggleActive;
+            if (this.state.isToggleActive) {
                 this.audioManager.startStreaming();
+                this.log('Mic Toggled ON');
             } else {
                 this.audioManager.stopStreaming();
+                this.log('Mic Toggled OFF');
             }
             await this.updateIcons();
         }
@@ -209,15 +220,15 @@ class StreamDeckGeminiApp {
         previewContainer.innerHTML = ''; // Clear previous
 
         // Key 0: PTT (Mic)
-        const micState = this.state.pttActive ? 'active' : 'idle';
+        const micState = this.state.isPTTActive ? 'active' : 'idle';
         const micIcon = await this.iconGenerator.createIcon('mic', micState);
-        await this.streamDeckManager.setKeyImage(0, micIcon.buffer);
+        await this.deck.fillBuffer(0, micIcon.buffer);
         this.addPreview(previewContainer, micIcon.blob, 'PTT');
 
         // Key 1: Toggle (Bubble)
-        const toggleState = this.state.toggleActive ? 'active' : 'idle';
+        const toggleState = this.state.isToggleActive ? 'active' : 'idle';
         const toggleIcon = await this.iconGenerator.createIcon('bubble', toggleState);
-        await this.streamDeckManager.setKeyImage(1, toggleIcon.buffer);
+        await this.deck.fillBuffer(1, toggleIcon.buffer);
         this.addPreview(previewContainer, toggleIcon.blob, 'Toggle');
     }
 
@@ -246,15 +257,16 @@ class StreamDeckGeminiApp {
     }
 
     log(message) {
-        const logDiv = document.getElementById('transcript-log');
+        const transcript = document.getElementById('transcript-log');
         const entry = document.createElement('div');
         entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-        logDiv.appendChild(entry);
-        logDiv.scrollTop = logDiv.scrollHeight;
+        transcript.appendChild(entry);
+        transcript.scrollTop = transcript.scrollHeight;
     }
 }
 
 // Start the app
 window.addEventListener('DOMContentLoaded', () => {
+    // @ts-ignore
     window.app = new StreamDeckGeminiApp();
 });
