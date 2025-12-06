@@ -38,11 +38,29 @@ export class StreamDeckManager extends EventTarget {
             
             console.log(`Stream Deck connected: ${this.device.productName} (PID: 0x${this.device.productId.toString(16)})`);
             
+            // Debug: Log collections
+            console.log('Device Collections:', this.device.collections);
+            this.device.collections.forEach((c, i) => {
+                console.log(`Collection ${i}: Usage ${c.usagePage}/${c.usage}`, c);
+                c.inputReports?.forEach(r => console.log(`  Input Report ${r.reportId}`));
+                c.outputReports?.forEach(r => console.log(`  Output Report ${r.reportId}`));
+                c.featureReports?.forEach(r => console.log(`  Feature Report ${r.reportId}`));
+            });
+            
             this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
             
             // Reset to clear any old state
-            await this.reset();
-            await this.clearAllKeys();
+            try {
+                await this.reset();
+            } catch (e) {
+                console.warn('Stream Deck Reset failed (ignoring):', e);
+            }
+
+            try {
+                await this.clearAllKeys();
+            } catch (e) {
+                console.warn('Stream Deck Clear Keys failed:', e);
+            }
 
         } catch (error) {
             console.error('Error connecting to Stream Deck:', error);
