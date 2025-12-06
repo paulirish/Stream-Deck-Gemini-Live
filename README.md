@@ -42,14 +42,9 @@ Since this uses modern browser APIs like WebHID and AudioWorklets, you can't jus
 
 ## Tech Stack
 
-*   **Vanilla JS:** No frameworks, just raw power.
-*   **WebHID:** For talking to the Stream Deck hardware.
-*   **WebSockets:** For streaming audio to/from Gemini.
-*   **Web Audio API:** For capturing your beautiful voice and playing back Gemini's response.
+Vanilla JS, WebHID, WebSockets, Web Audio API. 
 
 ## Troubleshooting
 
 *   **"No device found":** Make sure your Stream Deck isn't being hogged by the official Elgato software. You might need to quit the Stream Deck app completely.
 *   **Audio issues:** Check the "Device Selector" in the UI to make sure the right mic and speakers are selected.
-
-Enjoy talking to the machine! 🤖

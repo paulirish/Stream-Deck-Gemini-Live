@@ -1,4 +1,4 @@
-import {StreamDeckV2} from './streamdeckv2.js';
+import {StreamDeckV2} from '../src/lib/streamdeckv2.js';
 
 
 describe('StreamDeckV2 Library', () => {

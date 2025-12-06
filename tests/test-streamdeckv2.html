@@ -32,7 +32,7 @@
     <script src="streamdeckv2.test.js" type="module"></script>
 
     <script type="module">
-        import {StreamDeckV2} from './streamdeckv2.js';
+        import {StreamDeckV2} from '../src/lib/streamdeckv2.js';
         // Separate script for the manual trigger to keep test file clean-ish or just inline it here for simplicity
         const sdManual = new StreamDeckV2();
         document.getElementById('connect-btn').addEventListener('click', async () => {
