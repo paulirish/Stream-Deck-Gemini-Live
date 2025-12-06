@@ -22,7 +22,7 @@
  * A generalized library for interacting with the Stream Deck V2.
  * Combines logic from the original StreamDeck and StreamDeckV2 classes.
  */
-class StreamDeckV2 {
+export class StreamDeckV2 {
 
   // StreamDeckV2 Constants
   static PRODUCT_ID = 0x006d;
