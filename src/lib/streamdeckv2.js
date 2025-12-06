@@ -259,6 +259,20 @@ export class StreamDeckV2 {
   }
 
   /**
+   * Set the brightness of the StreamDeck panel.
+   *
+   * @param {number} percentage 0-100
+   * @return {?Promise<void>}
+   */
+  async setBrightness(percentage) {
+    this.#readyOrThrow();
+    // Clamp percentage between 0 and 100
+    const value = Math.max(0, Math.min(100, percentage));
+    const data = new Uint8Array([0x08, value]);
+    await this.#device.sendFeatureReport(0x03, data);
+  }
+
+  /**
    * Gets the device name.
    *
    * @return {?string} Device name.

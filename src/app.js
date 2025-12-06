@@ -85,11 +85,26 @@ class StreamDeckGeminiApp {
         const connectBtn = document.getElementById('connect-streamdeck');
         const apiKeyInput = /** @type {HTMLInputElement} */ (document.getElementById('api-key'));
         const debugCheckbox = /** @type {HTMLInputElement} */ (document.getElementById('debug-mode'));
+        const brightnessSlider = /** @type {HTMLInputElement} */ (document.getElementById('brightness-slider'));
 
         // Load saved API Key
         const savedKey = localStorage.getItem('gemini_api_key');
         if (savedKey) apiKeyInput.value = savedKey;
         apiKeyInput.addEventListener('change', () => localStorage.setItem('gemini_api_key', apiKeyInput.value));
+
+        // Load saved Brightness
+        if (brightnessSlider) {
+            const savedBrightness = localStorage.getItem('streamdeck_brightness');
+            if (savedBrightness) brightnessSlider.value = savedBrightness;
+            
+            brightnessSlider.addEventListener('input', () => {
+                const val = parseInt(brightnessSlider.value, 10);
+                if (this.state.connected) {
+                    this.deck.setBrightness(val);
+                }
+                localStorage.setItem('streamdeck_brightness', String(val));
+            });
+        }
 
         // Debug Mode Toggle
         if (debugCheckbox) {
@@ -177,6 +192,12 @@ class StreamDeckGeminiApp {
             console.warn('Stream Deck Reset/Clear failed:', e);
         }
 
+        // Apply Brightness
+        const brightnessSlider = /** @type {HTMLInputElement} */ (document.getElementById('brightness-slider'));
+        if (brightnessSlider) {
+            await this.deck.setBrightness(parseInt(brightnessSlider.value, 10));
+        }
+
         await this.updateIcons();
         this.log('System Connected');
     }
@@ -228,13 +249,13 @@ class StreamDeckGeminiApp {
         const micState = this.state.isPTTActive ? 'active' : 'idle';
         const micIcon = await this.iconGenerator.createIcon('mic', micState);
         await this.deck.fillBuffer(0, micIcon.buffer);
-        this.addPreview(previewContainer, micIcon.blob, 'PTT');
+        this.addPreview(previewContainer, micIcon.blob, 'Push To Talk');
 
         // Key 1: Toggle (Bubble)
         const toggleState = this.state.isToggleActive ? 'active' : 'idle';
         const toggleIcon = await this.iconGenerator.createIcon('bubble', toggleState);
         await this.deck.fillBuffer(1, toggleIcon.buffer);
-        this.addPreview(previewContainer, toggleIcon.blob, 'Toggle');
+        this.addPreview(previewContainer, toggleIcon.blob, 'Toggle Mic');
     }
 
     addPreview(container, blob, label) {
