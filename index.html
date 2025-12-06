@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Deck Gemini Live</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stream Deck Gemini Live</h1>
+            <div id="status-indicator" class="status disconnected">Disconnected</div>
+        </header>
+
+        <main>
+            <section id="settings-panel">
+                <h2>Settings</h2>
+                <div class="form-group">
+                    <label for="api-key">Gemini API Key</label>
+                    <input type="password" id="api-key" placeholder="Enter your API Key">
+                </div>
+                
+                <div class="form-group">
+                    <label for="mic-select">Microphone</label>
+                    <select id="mic-select"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="speaker-select">Speaker</label>
+                    <select id="speaker-select"></select>
+                </div>
+
+                <div class="form-group">
+                    <button id="connect-streamdeck">Connect Stream Deck</button>
+                    <span id="streamdeck-status" class="status-text">No Device</span>
+                </div>
+            </section>
+
+            <section id="transcript-panel">
+                <h2>Transcript</h2>
+                <div id="transcript-log"></div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>
