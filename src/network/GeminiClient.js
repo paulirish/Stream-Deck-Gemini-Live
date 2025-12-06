@@ -35,7 +35,8 @@ export class GeminiClient extends EventTarget {
                 this.dispatchEvent(new CustomEvent('error', { detail: error }));
             };
 
-            this.ws.onclose = () => {
+            this.ws.onclose = (e) => {
+                console.warn('WebSocket closed', e.reason);
                 this.isConnected = false;
                 this.dispatchEvent(new Event('close'));
             };

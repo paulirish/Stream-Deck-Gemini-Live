@@ -89,6 +89,7 @@ class StreamDeckGeminiApp {
         // Load saved API Key
         const savedKey = localStorage.getItem('gemini_api_key');
         if (savedKey) apiKeyInput.value = savedKey;
+        apiKeyInput.addEventListener('change', () => localStorage.setItem('gemini_api_key', apiKeyInput.value));
 
         // Debug Mode Toggle
         if (debugCheckbox) {
@@ -105,7 +106,6 @@ class StreamDeckGeminiApp {
                 if (!apiKey) {
                     throw new Error('Please enter a Gemini API Key');
                 }
-                localStorage.setItem('gemini_api_key', apiKey);
 
                 // Connect Stream Deck
                 const connected = await this.deck.connect(true); // true = show picker
@@ -138,6 +138,10 @@ class StreamDeckGeminiApp {
         this.geminiClient.addEventListener('error', (e) => {
             this.log(`Gemini Error: ${/** @type {CustomEvent} */(e).detail.message || 'Unknown error'}`);
         });
+
+        this.geminiClient.addEventListener('close', () => {
+            this.log('Disconnected from Gemini');
+        });
     }
 
     async onStreamDeckConnected() {
@@ -156,6 +160,7 @@ class StreamDeckGeminiApp {
                     systemInstruction: "You are a helpful voice assistant."
                 });
                 this.state.geminiConnected = true;
+                this.log('Gemini Connected');
             } catch (e) {
                 this.log('Gemini Connection Failed');
             }
