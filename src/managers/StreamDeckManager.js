@@ -13,9 +13,8 @@ export class StreamDeckManager extends EventTarget {
         this.OFFSET = 4;
         this.NUM_KEYS = 15;
         this.ICON_SIZE = 72;
-        // Report ID 2 has 1023 bytes payload in descriptor.
-        // WebHID sendReport(2, data) expects data.byteLength === 1023.
-        this.PACKET_SIZE = 1023; 
+        // User requested 1024 bytes packet size to match StreamDeckV2.js reference
+        this.PACKET_SIZE = 1024; 
         this.PACKET_HEADER_LENGTH = 8;
         this.MAX_PAYLOAD_LENGTH = this.PACKET_SIZE - this.PACKET_HEADER_LENGTH;
         

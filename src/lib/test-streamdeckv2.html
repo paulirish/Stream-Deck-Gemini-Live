@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamDeckV2 Library Tests</title>
+    <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #controls { margin-bottom: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Manual Testing Trigger</h3>
+        <p>WebHID requires a user gesture to initiate a connection. Click the button below to test a real device connection.</p>
+        <button id="connect-btn">Connect Real Device (Optional)</button>
+    </div>
+
+    <div id="mocha"></div>
+
+ <script src="https://unpkg.com/chai@4/chai.js"></script>
+    <script src="https://unpkg.com/mocha/mocha.js"></script>
+
+    <!-- Library under test -->
+    <script src="streamdeckv2.js"></script>
+
+    <script class="mocha-init">
+        mocha.setup('bdd');
+        mocha.checkLeaks();
+        const expect = chai.expect;
+    </script>
+
+    <script src="streamdeckv2.test.js"></script>
+
+    <script>
+        // Separate script for the manual trigger to keep test file clean-ish or just inline it here for simplicity
+        const sdManual = new StreamDeckV2();
+        document.getElementById('connect-btn').addEventListener('click', async () => {
+            try {
+                const result = await sdManual.connect(true);
+                console.log('Manual connection result:', result);
+                if (result) {
+                    alert('Connected! Check console for details. Serial: ' + await sdManual.getSerialNumber());
+                    await sdManual.fillColor(0, '#00FF00'); // Green on button 0
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Connection failed: ' + e.message);
+            }
+        });
+
+        mocha.run();
+    </script>
+</body>
+</html>
