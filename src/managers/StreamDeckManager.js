@@ -20,6 +20,7 @@ export class StreamDeckManager extends EventTarget {
         this.MAX_PAYLOAD_LENGTH = this.PACKET_SIZE - this.PACKET_HEADER_LENGTH;
         
         this.keyState = new Array(this.NUM_KEYS).fill(false);
+        this.debugMode = false;
     }
 
     /**
@@ -36,28 +37,63 @@ export class StreamDeckManager extends EventTarget {
             }
 
             this.device = devices[0];
-            await this.device.open();
-            
-            console.log(`Stream Deck connected: ${this.device.productName} (PID: 0x${this.device.productId.toString(16)})`);
-            
-            this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
-            
-            // Reset to clear any old state
-            try {
-                await this.reset();
-            } catch (e) {
-                console.warn('Stream Deck Reset failed (ignoring):', e);
-            }
-
-            try {
-                await this.clearAllKeys();
-            } catch (e) {
-                console.warn('Stream Deck Clear Keys failed:', e);
-            }
+            await this.openDevice();
 
         } catch (error) {
             console.error('Error connecting to Stream Deck:', error);
             throw error;
+        }
+    }
+
+    async autoConnect() {
+        try {
+            const devices = await navigator.hid.getDevices();
+            const device = devices.find(d => d.vendorId === this.VENDOR_ID);
+            
+            if (device) {
+                this.device = device;
+                await this.openDevice();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Auto-connect failed:', error);
+            return false;
+        }
+    }
+
+    async openDevice() {
+        if (!this.device) return;
+        
+        if (!this.device.opened) {
+            await this.device.open();
+        }
+        
+        console.log(`Stream Deck connected: ${this.device.productName} (PID: 0x${this.device.productId.toString(16)})`);
+        
+        if (this.debugMode) {
+            console.log('Device Collections:', this.device.collections);
+            this.device.collections.forEach((c, i) => {
+                console.log(`Collection ${i}: Usage ${c.usagePage}/${c.usage}`, c);
+                c.inputReports?.forEach(r => console.log(`  Input Report ${r.reportId}`));
+                c.outputReports?.forEach(r => console.log(`  Output Report ${r.reportId}`));
+                c.featureReports?.forEach(r => console.log(`  Feature Report ${r.reportId}`));
+            });
+        }
+        
+        this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
+        
+        // Reset to clear any old state
+        try {
+            await this.reset();
+        } catch (e) {
+            console.warn('Stream Deck Reset failed (ignoring):', e);
+        }
+
+        try {
+            await this.clearAllKeys();
+        } catch (e) {
+            console.warn('Stream Deck Clear Keys failed:', e);
         }
     }
 

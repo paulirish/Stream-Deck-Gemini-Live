@@ -7,8 +7,12 @@ export class IconGenerator {
         const canvas = new OffscreenCanvas(this.size, this.size);
         const ctx = canvas.getContext('2d');
 
+        // Stream Deck MK.2 often requires 180 degree rotation
+        ctx.translate(this.size, this.size);
+        ctx.rotate(Math.PI);
+
         // Background
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = state === 'active' ? (type === 'mic' ? '#ff4444' : '#44ff44') : '#333333';
         ctx.fillRect(0, 0, this.size, this.size);
 
         // Icon Style
