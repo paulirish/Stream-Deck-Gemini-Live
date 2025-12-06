@@ -13,7 +13,9 @@ export class StreamDeckManager extends EventTarget {
         this.OFFSET = 4;
         this.NUM_KEYS = 15;
         this.ICON_SIZE = 72;
-        this.PACKET_SIZE = 1024;
+        // Report ID 2 has 1023 bytes payload in descriptor.
+        // WebHID sendReport(2, data) expects data.byteLength === 1023.
+        this.PACKET_SIZE = 1023; 
         this.PACKET_HEADER_LENGTH = 8;
         this.MAX_PAYLOAD_LENGTH = this.PACKET_SIZE - this.PACKET_HEADER_LENGTH;
         
@@ -37,15 +39,6 @@ export class StreamDeckManager extends EventTarget {
             await this.device.open();
             
             console.log(`Stream Deck connected: ${this.device.productName} (PID: 0x${this.device.productId.toString(16)})`);
-            
-            // Debug: Log collections
-            console.log('Device Collections:', this.device.collections);
-            this.device.collections.forEach((c, i) => {
-                console.log(`Collection ${i}: Usage ${c.usagePage}/${c.usage}`, c);
-                c.inputReports?.forEach(r => console.log(`  Input Report ${r.reportId}`));
-                c.outputReports?.forEach(r => console.log(`  Output Report ${r.reportId}`));
-                c.featureReports?.forEach(r => console.log(`  Feature Report ${r.reportId}`));
-            });
             
             this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
             
@@ -97,7 +90,10 @@ export class StreamDeckManager extends EventTarget {
     async reset() {
         if (!this.device) return;
         // Feature Report 0x03: Reset
-        const data = new Uint8Array([0x02]);
+        // Descriptor says Report 3 has 31 bytes.
+        const data = new Uint8Array(31);
+        data[0] = 0x02; // Reset command
+        // Remaining bytes are 0 padding
         await this.device.sendFeatureReport(0x03, data);
     }
 
@@ -143,7 +139,7 @@ export class StreamDeckManager extends EventTarget {
             const header = new ArrayBuffer(this.PACKET_HEADER_LENGTH);
             const dv = new DataView(header);
 
-            dv.setUint8(0, 0x02); // Report ID
+            dv.setUint8(0, 0x02); // Report ID (Payload Byte 0)
             dv.setUint8(1, 0x07); // Command: Set Icon
             dv.setUint8(2, keyIndex);
             dv.setUint8(3, isLastPacket ? 1 : 0);
