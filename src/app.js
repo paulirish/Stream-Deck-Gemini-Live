@@ -157,7 +157,70 @@ class StreamDeckGeminiApp {
         this.geminiClient.addEventListener('close', () => {
             this.log('Disconnected from Gemini');
         });
+
+        this.geminiClient.addEventListener('transcription', (e) => {
+            const { role, text } = /** @type {CustomEvent} */(e).detail;
+            this.log(`${role === 'user' ? 'User' : 'Gemini'}: ${text}`);
+        });
+
+        this.geminiClient.addEventListener('usage', (e) => {
+            this.updateTokenStats(/** @type {CustomEvent} */(e).detail);
+        });
+
+        // Fetch Models if API Key is available
+        const storedKey = localStorage.getItem('gemini_api_key');
+        // if (storedKey) {
+        //     this.loadModels(storedKey);
+        // }
+        
+        apiKeyInput.addEventListener('change', () => {
+            const newKey = apiKeyInput.value;
+            localStorage.setItem('gemini_api_key', newKey);
+            // if (newKey) this.loadModels(newKey);
+        });
     }
+
+    // async loadModels(apiKey) {
+    //     const modelSelect = /** @type {HTMLSelectElement} */ (document.getElementById('model-select'));
+    //     modelSelect.innerHTML = '<option disabled selected>Loading...</option>';
+        
+    //     const models = await GeminiClient.fetchModels(apiKey);
+        
+    //     modelSelect.innerHTML = ''; // Clear loading
+        
+    //     // Filter for relevant models (Gemini 2.0/Live capable) if possible, 
+    //     // or just show all and let user pick.
+    //     // The user mentioned: "2.0-flash, 2.5-flash , gemini-2.5-flash-native-audio-preview, gemini-live-2.5-flash-preview, etc."
+    //     // I'll show all that contain "gemini" to be safe, or just all.
+    //     // But sorting them might be nice.
+        
+    //     if (models.length === 0) {
+    //          const option = document.createElement('option');
+    //          option.text = "Failed to load models or Invalid Key";
+    //          modelSelect.add(option);
+    //          return;
+    //     }
+
+    //     models.forEach(model => {
+    //         // model.name is like "models/gemini-1.5-flash"
+    //         // model.displayName is "Gemini 1.5 Flash"
+    //         const option = document.createElement('option');
+    //         option.value = model.name;
+    //         option.textContent = model.displayName || model.name.split('/').pop();
+            
+    //         // Auto-select a good default if it matches "gemini-2.0-flash-exp"
+    //         if (model.name.includes('gemini-2.0-flash-exp')) {
+    //             option.selected = true;
+    //         }
+            
+    //         modelSelect.appendChild(option);
+    //     });
+        
+    //     // If nothing selected, select the first one
+    //     if (modelSelect.selectedIndex === -1 && modelSelect.options.length > 0) {
+    //         modelSelect.selectedIndex = 0;
+    //     }
+    // }
 
     async onStreamDeckConnected() {
         const apiKeyInput = /** @type {HTMLInputElement} */ (document.getElementById('api-key'));
@@ -168,16 +231,26 @@ class StreamDeckGeminiApp {
         const micId = micSelect.value;
         await this.audioManager.initialize(micId);
 
+        // Get Configuration
+        const modelSelect = /** @type {HTMLSelectElement} */ (document.getElementById('model-select'));
+        const voiceSelect = /** @type {HTMLSelectElement} */ (document.getElementById('voice-select'));
+        
+        const config = {
+            // hardcoded to gemini-2.0-flash-exp for now.
+            model: this.geminiClient.model,
+            voiceName: voiceSelect.value,
+            systemInstruction: "You are a helpful voice assistant."
+        };
+
         // Connect to Gemini if Key is present
         if (apiKey) {
             try {
-                await this.geminiClient.connect(apiKey, {
-                    systemInstruction: "You are a helpful voice assistant."
-                });
+                await this.geminiClient.connect(apiKey, config);
                 this.state.geminiConnected = true;
                 this.log('Gemini Connected');
             } catch (e) {
                 this.log('Gemini Connection Failed');
+                console.error(e);
             }
         }
         
@@ -207,6 +280,41 @@ class StreamDeckGeminiApp {
         statusText.textContent = text;
         statusText.className = `status-text status-${type}`;
         statusText.style.color = `var(--status-${type})`;
+    }
+
+    updateTokenStats(usage) {
+        if (!usage) return;
+        
+     
+        const tokenString = `
+        Prompt:   ${usage.promptTokensDetails.map(t => `${t.modality.toLowerCase()}: ${t.tokenCount.toLocaleString().padStart(9    )}`).join(', ')}
+        Response: ${usage.responseTokensDetails.map(t => `${t.modality.toLowerCase()}: ${t.tokenCount.toLocaleString().padStart(9)}`).join(', ')}
+        Total:    ${usage.totalTokenCount.toLocaleString().padStart(9)}
+        `;
+        
+        // see pricing-deets.md 
+
+        // // Live API (2.5-flash-native-audio-preview-09-2025)
+        // const inputTextCost = (usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000)    * 0.50;
+        // const outputTextCost = (usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000) * 2.00;
+        // const inputAudioCost = (usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000)    * 3.00;
+        // const outputAudioCost = (usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000) * 12.00;
+
+        // gemini-2.0-flash-live-001
+        const inputTextCost = (usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000)    * 0.35;
+        const outputTextCost = (usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0 / 1_000_000) * 1.50;
+        const inputAudioCost = (usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000)    * 2.10;
+        const outputAudioCost = (usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0 / 1_000_000) * 8.50;
+
+        const totalCost = inputTextCost + outputTextCost + inputAudioCost + outputAudioCost;
+
+        const countEl = document.getElementById('token-count');
+        const costEl = document.getElementById('cost-estimate');
+
+        const formattedValue = Intl.NumberFormat('en', {currency: 'USD', style: 'currency'}).format(totalCost);
+        
+        if (countEl) countEl.textContent = tokenString;
+        if (costEl) costEl.textContent = formattedValue;
     }
 
     async handleButtonPress(keyIndex, isDown) {
