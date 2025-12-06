@@ -92,6 +92,10 @@ class StreamDeckGeminiApp {
         if (savedKey) apiKeyInput.value = savedKey;
         apiKeyInput.addEventListener('change', () => localStorage.setItem('gemini_api_key', apiKeyInput.value));
 
+        GeminiClient.fetchModels(apiKeyInput.value).then(models => {
+            console.log('Models:', models);
+        });
+
         // Load saved Brightness
         if (brightnessSlider) {
             const savedBrightness = localStorage.getItem('streamdeck_brightness');

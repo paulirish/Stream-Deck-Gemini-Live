@@ -12,23 +12,23 @@ export class GeminiClient extends EventTarget {
     }
 
 
-    // lol only 2.0-flash-exp supports bidiGenerateContent. 
     // /**
-    //  * Fetch available models from the Gemini API.
+    //  * Fetch available models from the Gemini API. there's basically 3 unique models available rn.
     //  * @param {string} apiKey 
     //  * @returns {Promise<Array<{name: string, displayName: string}>>}
     //  */
-    // static async fetchModels(apiKey) {
-    //     try {
-    //         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-    //         if (!response.ok) throw new Error(`Failed to fetch models: ${response.statusText}`);
-    //         const data = await response.json();
-    //         return data.models.filter(model => model.supportedGenerationMethods?.includes('bidiGenerateContent')) || [];
-    //     } catch (error) {
-    //         console.error('Error fetching models:', error);
-    //         return [];
-    //     }
-    // }
+    static async fetchModels(apiKey) {
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=200`);
+            if (!response.ok) throw new Error(`Failed to fetch models: ${response.statusText}`);
+            const data = await response.json();
+            const models =  data.models.filter(model => model.supportedGenerationMethods?.includes('bidiGenerateContent') && !model.name.includes('image') && !model.name.includes('preview-09-2025'));
+            return models || [];
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            return [];
+        }
+    }
 
     /**
      * Connect to the Gemini API.
