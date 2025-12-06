@@ -297,17 +297,17 @@ class StreamDeckGeminiApp {
         
         // see pricing-deets.md 
 
-        // // Live API (2.5-flash-native-audio-preview-09-2025)
-        // const inputTextCost = ((usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000)    * 0.50;
-        // const outputTextCost = ((usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000) * 2.00;
-        // const inputAudioCost = ((usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000)    * 3.00;
-        // const outputAudioCost = ((usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000) * 12.00;
-
         // gemini-2.0-flash-live-001
         const inputTextCost = ((usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000)    * 0.35;
         const outputTextCost = ((usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000) * 1.50;
         const inputAudioCost = ((usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000)    * 2.10;
         const outputAudioCost = ((usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000) * 8.50;
+
+        // // Live API (2.5-flash-native-audio-preview-09-2025)
+        // const inputTextCost = ((usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000)    * 0.50;
+        // const outputTextCost = ((usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000) * 2.00;
+        // const inputAudioCost = ((usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000)    * 3.00;
+        // const outputAudioCost = ((usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000) * 12.00;
 
         const totalCost = inputTextCost + outputTextCost + inputAudioCost + outputAudioCost;
 

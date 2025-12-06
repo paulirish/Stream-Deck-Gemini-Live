@@ -1,14 +1,15 @@
 /**
- * Manages the WebSocket connection to the Gemini Multimodal Live API.
+ * Manages the connection to the Gemini Multimodal Live API using @google/genai SDK.
  */
+import { GoogleGenAI } from "https://esm.run/@google/genai";
+
 export class GeminiClient extends EventTarget {
     constructor() {
         super();
-        this.ws = null;
+        this.client = null;
+        this.session = null;
         this.isConnected = false;
-        this.model = 'models/gemini-2.0-flash-exp';
-        this.host = 'generativelanguage.googleapis.com';
-        this.uri = `wss://${this.host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent`;
+        this.model = 'gemini-2.5-flash-native-audio-preview-09-2025';
     }
 
 
@@ -35,62 +36,58 @@ export class GeminiClient extends EventTarget {
      * @param {string} apiKey 
      * @param {object} config Optional configuration (system instructions, voice, model)
      */
-    connect(apiKey, config = {}) {
-        return new Promise((resolve, reject) => {
-            if (config.model) {
-                this.model = config.model;
-            }
-            const url = `${this.uri}?key=${apiKey}`;
-            this.ws = new WebSocket(url);
-
-            this.ws.onopen = () => {
-                this.isConnected = true;
-                this.sendSetup(config);
-                resolve();
-            };
-
-            this.ws.onmessage = this.handleMessage.bind(this);
-            
-            this.ws.onerror = (error) => {
-                console.error('WebSocket Error:', error);
-                if (!this.isConnected) reject(error);
-                this.dispatchEvent(new CustomEvent('error', { detail: error }));
-            };
-
-            this.ws.onclose = (e) => {
-                console.warn('WebSocket closed', e.reason);
-                this.isConnected = false;
-                this.dispatchEvent(new Event('close'));
-            };
-        });
-    }
-
-    sendSetup(config) {
-        const setupMessage = {
-            setup: {
-                model: this.model,
-                generationConfig: {
-                    responseModalities: ['AUDIO'],
-                    speechConfig: {
-                        voiceConfig: {
-                            prebuiltVoiceConfig: {
-                                voiceName: config.voiceName || 'Puck'
-                            }
-                        }
-                    }
-                },
-                inputAudioTranscription: {},
-                outputAudioTranscription: {}
-            }
-        };
+    async connect(apiKey, config = {}) {
+        this.client = new GoogleGenAI({ apiKey: apiKey });
         
-        if (config.systemInstruction) {
-            setupMessage.setup.systemInstruction = {
-                parts: [{ text: config.systemInstruction }]
-            };
+        if (config.model) {
+            this.model = config.model;
         }
 
-        this.send(setupMessage);
+        const sessionConfig = {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+                voiceConfig: {
+                    prebuiltVoiceConfig: {
+                        voiceName: config.voiceName || 'Puck'
+                    }
+                }
+            }
+        };
+
+        if (config.systemInstruction) {
+            sessionConfig.systemInstruction = config.systemInstruction;
+        }
+
+        try {
+            this.session = await this.client.live.connect({
+                model: this.model,
+                config: sessionConfig,
+                callbacks: {
+                    onopen: () => {
+                        console.debug('Session Opened');
+                        this.isConnected = true;
+                    },
+                    onmessage: (message) => {
+                        this.handleMessage(message);
+                    },
+                    onerror: (e) => {
+                        console.error('Session Error:', e);
+                        this.dispatchEvent(new CustomEvent('error', { detail: e }));
+                    },
+                    onclose: (e) => {
+                        console.debug('Session Closed:', e);
+                        this.isConnected = false;
+                        this.dispatchEvent(new Event('close'));
+                    }
+                }
+            });
+            // The connect promise resolves when the session is established
+            this.isConnected = true;
+        } catch (error) {
+            console.error('Connection failed:', error);
+            this.isConnected = false;
+            throw error;
+        }
     }
 
     /**
@@ -98,192 +95,67 @@ export class GeminiClient extends EventTarget {
      * @param {ArrayBuffer} pcmData 16-bit PCM, 16kHz, Mono
      */
     sendAudio(pcmData) {
-        if (!this.isConnected) return;
+        if (!this.isConnected || !this.session) return;
 
         // Convert ArrayBuffer to Base64
         const base64Audio = this.arrayBufferToBase64(pcmData);
 
-        const message = {
-            realtimeInput: {
-                mediaChunks: [{
-                    mimeType: 'audio/pcm;rate=16000',
-                    data: base64Audio
-                }]
+        this.session.sendRealtimeInput({
+            audio: {
+                data: base64Audio,
+                mimeType: "audio/pcm;rate=16000"
             }
-        };
-
-        this.send(message);
+        });
     }
 
     send(data) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify(data));
-        }
+        // Fallback for direct send if needed, but session.sendRealtimeInput should be used.
+        // This method might be called by legacy code if any.
+        console.warn('send() called but using SDK session. Use sendAudio() instead.');
     }
 
-    async handleMessage(event) {
-        let data;
-        if (event.data instanceof Blob) {
-            // Should be JSON text, but if binary, we might need to handle differently
-            const text = await event.data.text();
-            data = JSON.parse(text);
-        } else {
-            data = JSON.parse(event.data);
-        }
-
-        // Handle Server Content (Audio)
-        if (data.serverContent) {
-            if (data.serverContent.modelTurn) {
-                const parts = data.serverContent.modelTurn.parts;
+    handleMessage(message) {
+        // Handle Server Content (Audio & Transcription)
+        // message.serverContent contains the data
+        
+        const serverContent = message.serverContent;
+        
+        if (serverContent) {
+            if (serverContent.modelTurn) {
+                const parts = serverContent.modelTurn.parts;
                 for (const part of parts) {
                     if (part.inlineData && part.inlineData.mimeType.startsWith('audio/pcm')) {
                         // Decode Base64 audio
                         const pcmData = this.base64ToArrayBuffer(part.inlineData.data);
                         this.dispatchEvent(new CustomEvent('audiooutput', { detail: pcmData }));
                     }
+                    if (part.text) {
+                         this.dispatchEvent(new CustomEvent('transcription', { 
+                             detail: { role: 'model', text: part.text } 
+                         }));
+                    }
                 }
             }
             
-            if (data.serverContent.turnComplete) {
+            if (serverContent.turnComplete) {
                 this.dispatchEvent(new Event('turncomplete'));
             }
         }
 
         // Handle Usage Metadata
-        if (data.usageMetadata) {
-            this.dispatchEvent(new CustomEvent('usage', { detail: data.usageMetadata }));
+        // It might be on the message object directly in some SDK versions
+        if (message.usageMetadata) {
+            this.dispatchEvent(new CustomEvent('usage', { detail: message.usageMetadata }));
         }
 
-        console.log('Server Content:', data.serverContent);
-        // Handle Transcriptions (if available in the future or via tool outputs)
-        // Note: The current BidiGenerateContent API might not send transcriptions directly in the stream 
-        // in the same way as the REST API, but if it does, it would likely be in serverContent.
-        // Checking for input/output transcription in serverContent (hypothetical structure based on user request)
-        // The user mentioned: "Use inputTranscription and outputTranscription from BidiGenerateContentServerContent"
-        
-        // Check for input transcription (User)
-        // Note: This might come in a different message type or part of serverContent
-        // Based on API docs (or assumption), let's check where it might be.
-        // Actually, for Bidi, it's often in `serverContent.modelTurn` for output text, 
-        // but input transcription is usually a separate field if enabled.
-        // However, the user explicitly asked to use `inputTranscription` and `outputTranscription` from `BidiGenerateContentServerContent`.
-        // So I will check for those fields in `data.serverContent`.
-        
-        /* 
-           Note: The actual API structure for BidiGenerateContentServerContent is:
-           {
-             modelTurn: { ... },
-             turnComplete: boolean,
-             interrupted: boolean,
-             groundingMetadata: { ... }
-           }
-           Wait, looking at recent API updates, `inputTranscription` might be there?
-           Let's assume the user knows what they are talking about regarding the API structure.
-           If not, I'll log what I see.
-        */
-
-        // Hypothetical support based on user request
-        // "Use inputTranscription and outputTranscription from BidiGenerateContentServerContent"
-        // This implies `data.serverContent.inputTranscription`? Or maybe it's a sibling of serverContent?
-        // Let's assume it's inside serverContent based on the name.
-        
-        // Actually, looking at the proto definitions for BidiGenerateContent, 
-        // there isn't an explicit `inputTranscription` field in `ServerContent`.
-        // However, `modelTurn` can contain text parts which are the output transcription.
-        // Input transcription is often sent back if requested.
-        // Let's try to find it in the response.
-        
-        // For now, I'll implement checking for `modelTurn` text parts as output transcription.
-        // And I'll look for any field that looks like input transcription.
-        
-        // Re-reading user request: "Use inputTranscription and outputTranscription from BidiGenerateContentServerContent"
-        // Okay, I will trust the user and look for those fields.
-        
-        // Also, `toolCall` and `toolResponse` are things.
-        
-        // Let's just add the checks.
-        
-        // Check for Output Transcription (Model Text)
-        if (data.serverContent?.modelTurn?.parts) {
-             const textParts = data.serverContent.modelTurn.parts.filter(p => p.text);
-             if (textParts.length > 0) {
-                 const text = textParts.map(p => p.text).join(' ');
-                 this.dispatchEvent(new CustomEvent('transcription', { 
-                     detail: { role: 'model', text: text } 
-                 }));
-             }
-        }
-
-        // Check for Input Transcription (User Audio -> Text)
-        // Assuming it might be in serverContent based on user hint
-        // Note: The API might require specific config to enable this, but I'll add the handler.
-        // If the user is right about the field names:
-        // (Note: I can't verify the exact field name without docs, but I'll try to be robust)
-        
-        // Actually, I'll just look for any text parts in `modelTurn` (which is output).
-        // For input, it's tricky. 
-        // Let's assume the user is referring to a specific field they know exists.
-        
-        // Wait, I should check if `data` itself has these fields? No, `BidiGenerateContentServerContent` implies `serverContent`.
-        
-        // Let's try to look for `data.serverContent.inputTranscription` (hypothetical)
-        // Or maybe it's in `toolUse`? No.
-        
-        // I will add a generic logger for now to see what we get, 
-        // but specifically implement what the user asked for if those fields exist.
-        
-        // User said: "Use inputTranscription and outputTranscription from BidiGenerateContentServerContent"
-        // So:
-        /*
-        message BidiGenerateContentServerContent {
-            bool turn_complete = 1;
-            bool interrupted = 2;
-            Content model_turn = 3;
-            // ...
-        }
-        */
-       // It seems the user might be referring to a very new or preview feature.
-       // I will add code to check for these properties dynamically.
-       
-
-       // Hypothetical implementation
-       if (data.serverContent) {
-           // ... existing code ...
-           
-           // User requested fields
-           // Note: These might not be in the typed definition yet if it's preview.
-           // I'll access them safely.
-           const content = data.serverContent;
-           
-           // Output Transcription is usually in modelTurn, but maybe there's a dedicated field now?
-           // The user said "outputTranscription", so I'll check for that too.
-           
-           if (content.outputTranscription) {
-               // Assuming it's a string or object with text?
-               // Let's assume it's similar to Content or just a string?
-               // I'll log it as 'model'
-               console.log('outputTranscription', content.outputTranscription);
-               this.dispatchEvent(new CustomEvent('transcription', {
-                   detail: { role: 'model', text: content.outputTranscription }
-               }));
-           }
-           
-           if (content.inputTranscription) {
-               console.log('inputTranscription', content.inputTranscription);
-               this.dispatchEvent(new CustomEvent('transcription', {
-                   detail: { role: 'user', text: content.inputTranscription }
-               }));
-           }
-       }
-       
-       
-       // I'll integrate this into the `handleMessage` method.
+        // console.log('Server Content:', serverContent);
     }
 
     disconnect() {
-        if (this.ws) {
-            this.ws.close();
-            this.ws = null;
+        if (this.session) {
+            this.session.close();
+            this.session = null;
+            this.isConnected = false;
         }
     }
 
