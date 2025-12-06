@@ -78,7 +78,9 @@ export class GeminiClient extends EventTarget {
                             }
                         }
                     }
-                }
+                },
+                inputAudioTranscription: {},
+                outputAudioTranscription: {}
             }
         };
         
@@ -152,6 +154,7 @@ export class GeminiClient extends EventTarget {
             this.dispatchEvent(new CustomEvent('usage', { detail: data.usageMetadata }));
         }
 
+        console.log('Server Content:', data.serverContent);
         // Handle Transcriptions (if available in the future or via tool outputs)
         // Note: The current BidiGenerateContent API might not send transcriptions directly in the stream 
         // in the same way as the REST API, but if it does, it would likely be in serverContent.
@@ -242,7 +245,7 @@ export class GeminiClient extends EventTarget {
        // It seems the user might be referring to a very new or preview feature.
        // I will add code to check for these properties dynamically.
        
-       /*
+
        // Hypothetical implementation
        if (data.serverContent) {
            // ... existing code ...
@@ -259,18 +262,20 @@ export class GeminiClient extends EventTarget {
                // Assuming it's a string or object with text?
                // Let's assume it's similar to Content or just a string?
                // I'll log it as 'model'
+               console.log('outputTranscription', content.outputTranscription);
                this.dispatchEvent(new CustomEvent('transcription', {
                    detail: { role: 'model', text: content.outputTranscription }
                }));
            }
            
            if (content.inputTranscription) {
+               console.log('inputTranscription', content.inputTranscription);
                this.dispatchEvent(new CustomEvent('transcription', {
                    detail: { role: 'user', text: content.inputTranscription }
                }));
            }
        }
-       */
+       
        
        // I'll integrate this into the `handleMessage` method.
     }
