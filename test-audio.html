@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioManager Tests</title>
+    <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #controls { margin-bottom: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+        #viz { width: 300px; height: 50px; background: #eee; border: 1px solid #ccc; display: block; margin-top: 10px; }
+        .bar { height: 100%; background: green; width: 0%; transition: width 0.1s; }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Manual Microphone Test</h3>
+        <p>This test uses your real microphone. Ensure automated tests have finished before using.</p>
+        <button id="start-mic-btn">Start Microphone</button>
+        <button id="stop-mic-btn" disabled>Stop Microphone</button>
+        <div id="status">Status: Idle</div>
+        <div id="viz"><div class="bar" id="level-bar"></div></div>
+    </div>
+
+    <div id="mocha"></div>
+
+    <script src="https://unpkg.com/chai@4/chai.js"></script>
+    <script src="https://unpkg.com/mocha/mocha.js"></script>
+
+    <script class="mocha-init">
+        mocha.setup('bdd');
+        mocha.checkLeaks();
+        const expect = chai.expect;
+    </script>
+
+    <script src="tests/audio.test.js" type="module"></script>
+
+    <script type="module">
+        import { AudioManager } from './src/managers/AudioManager.js';
+
+        const startBtn = document.getElementById('start-mic-btn');
+        const stopBtn = document.getElementById('stop-mic-btn');
+        const statusDiv = document.getElementById('status');
+        const levelBar = document.getElementById('level-bar');
+
+        let audioManager;
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                if (!audioManager) {
+                    audioManager = new AudioManager();
+                    await audioManager.initialize();
+                }
+                
+                audioManager.startStreaming();
+                statusDiv.textContent = 'Status: Streaming (Check Console)';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+
+                audioManager.addEventListener('audioinput', (e) => {
+                    const int16Data = new Int16Array(e.detail);
+                    // Simple RMS calculation for visualization
+                    let sum = 0;
+                    for(let i=0; i<int16Data.length; i++){
+                        sum += (int16Data[i] * int16Data[i]);
+                    }
+                    const rms = Math.sqrt(sum / int16Data.length);
+                    // Normalize vaguely (Int16 max is 32768)
+                    const percent = Math.min(100, (rms / 1000) * 100); 
+                    levelBar.style.width = percent + '%';
+                });
+
+            } catch (e) {
+                console.error(e);
+                statusDiv.textContent = 'Status: Error - ' + e.message;
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (audioManager) {
+                audioManager.stopStreaming();
+                statusDiv.textContent = 'Status: Stopped';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                levelBar.style.width = '0%';
+            }
+        });
+
+        mocha.run();
+    </script>
+</body>
+</html>
