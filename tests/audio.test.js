@@ -43,6 +43,16 @@ describe('AudioManager', () => {
             return { connect: () => {} };
         }
 
+        createAnalyser() {
+            return {
+                fftSize: 2048,
+                frequencyBinCount: 1024,
+                smoothingTimeConstant: 0.8,
+                getByteTimeDomainData: (array) => { array.fill(128); },
+                connect: () => {}
+            };
+        }
+
         createBufferSource() {
             return {
                 buffer: null,

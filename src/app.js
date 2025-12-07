@@ -489,9 +489,6 @@ class StreamDeckGeminiApp {
             this.handleButtonPress(keyIndex, false);
         });
         
-        element.addEventListener('pointerleave', (e) => {
-             this.handleButtonPress(keyIndex, false);
-        });
     }
 
     appendChat(role, text) {
