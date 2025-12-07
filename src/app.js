@@ -428,11 +428,11 @@ class StreamDeckGeminiApp {
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
                 if (this.visualizer) this.visualizer.setStreaming(true);
-                this.log('PTT Active (Listening...)');
+                // this.log('PTT Active (Listening...)');
             } else {
                 this.audioManager.stopStreaming();
                 if (this.visualizer) this.visualizer.setStreaming(false);
-                this.log('PTT Inactive');
+                // this.log('PTT Inactive');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
                 }
@@ -450,11 +450,11 @@ class StreamDeckGeminiApp {
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
                 if (this.visualizer) this.visualizer.setStreaming(true);
-                this.log('Mic Toggled ON');
+                // this.log('Mic Toggled ON');
             } else {
                 this.audioManager.stopStreaming();
                 if (this.visualizer) this.visualizer.setStreaming(false);
-                this.log('Mic Toggled OFF');
+                // this.log('Mic Toggled OFF');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
                 }
