@@ -56,6 +56,7 @@ export class StreamDeckV2 {
   /** @type {Sequence<HIDDeviceFilter>} */
   #deviceFilters = [
     {vendorId: StreamDeckV2.VENDOR_ID, productId: StreamDeckV2.PRODUCT_ID}, // V2
+    {vendorId: StreamDeckV2.VENDOR_ID, productId: 0x00a5}, // MK2_SCISSOR
   ];
 
   /**
