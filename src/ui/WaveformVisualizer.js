@@ -39,7 +39,10 @@ export class WaveformVisualizer {
     }
 
     setStreaming(isStreaming) {
-        this.isStreaming = isStreaming;
+        // console.log('[WaveformVisualizer] setStreaming:', isStreaming);
+        if (this.isStreaming !== isStreaming) {
+            this.isStreaming = isStreaming;
+        }
     }
 
     /**
@@ -110,7 +113,7 @@ export class WaveformVisualizer {
         const width = this.canvas.width / window.devicePixelRatio;
         const height = this.canvas.height / window.devicePixelRatio;
 
-        // 1. Process Data
+        // 1. Process Data (only if streaming)
         if (this.isStreaming) {
             this.analyser.getByteTimeDomainData(this.dataArray);
 
@@ -122,10 +125,12 @@ export class WaveformVisualizer {
             }
             const rms = Math.sqrt(sum / this.bufferLength);
             
+            // if (Math.random() < 0.05) console.log('[Visualizer] RMS:', rms); // Sample log
+
             this.pushValue(rms);
         }
 
-        // 2. Render
+        // If still no history after potential streaming update (e.g., just started and no sound)
         this.ctx.clearRect(0, 0, width, height);
         
         // Background

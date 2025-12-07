@@ -44,8 +44,13 @@ export class AudioManager extends EventTarget {
 
             this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
             
+            let logCount = 0;
             this.workletNode.port.onmessage = (event) => {
-                if (!this.isStreaming) return;
+                if (!this.isStreaming) return; 
+                // if (logCount++ % 100 === 0) {
+                //      console.log('[AudioManager] Received audio chunk from worklet. Size:', event.data.byteLength);
+                // }
+
                 // PCM Data from Worklet
                 this.dispatchEvent(new CustomEvent('audioinput', { detail: event.data }));
             };
@@ -62,13 +67,15 @@ export class AudioManager extends EventTarget {
     }
 
     startStreaming() {
+        // console.log('[AudioManager] startStreaming called. Context state:', this.audioContext?.state);
         this.isStreaming = true;
         if (this.audioContext && this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+            this.audioContext.resume().then(() => console.log('[AudioManager] Context resumed'));
         }
     }
 
     stopStreaming() {
+        console.log('[AudioManager] stopStreaming called');
         this.isStreaming = false;
     }
 

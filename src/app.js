@@ -236,6 +236,19 @@ class StreamDeckGeminiApp {
                                 this.log('Please enter a Gemini API Key');
                                 return;
                             }
+
+                            // Initialize Audio (ensuring user gesture if clicked)
+                            const micSelect = /** @type {HTMLSelectElement} */ (document.getElementById('mic-select'));
+                            try {
+                                await this.audioManager.initialize(micSelect.value);
+                                if (this.visualizer && this.audioManager.analyser) {
+                                    this.visualizer.setAnalyser(this.audioManager.analyser);
+                                }
+                            } catch (err) {
+                                this.log(`Audio Init Failed: ${err.message}`);
+                                console.error(err);
+                                return;
+                            }
             
                             const voiceSelect = /** @type {HTMLSelectElement} */ (document.getElementById('voice-select'));
                             const config = {
@@ -309,15 +322,6 @@ class StreamDeckGeminiApp {
         const connectDeckBtn = document.getElementById('connect-streamdeck');
         connectDeckBtn.textContent = 'Disconnect Stream Deck';
         connectDeckBtn.classList.add('disconnect-active');
-
-        // Initialize Audio
-        const micSelect = /** @type {HTMLSelectElement} */ (document.getElementById('mic-select'));
-        const micId = micSelect.value;
-        await this.audioManager.initialize(micId);
-        
-        if (this.visualizer && this.audioManager.analyser) {
-            this.visualizer.setAnalyser(this.audioManager.analyser);
-        }
 
         this.state.connected = true;
         this.updateStatus('Connected & Live', 'live');

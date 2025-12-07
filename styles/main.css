@@ -306,7 +306,7 @@ input[type="checkbox"] {
     height: 72px;
     border-radius: var(--radius-sm);
     object-fit: cover;
-    /* rotate: 180deg;  Removed rotation as it might be handled by icon generation or not needed if source is correct */
+    rotate: 180deg; /* they are generated flipped for the steamdeck v2. unflip here. */
 }
 
 .key-label {
