@@ -113,7 +113,10 @@
                     <h2>Audio Management</h2>
                     <div class="form-group">
                         <label for="mic-select">Select Microphone</label>
-                        <select id="mic-select" class="form-select"></select>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="mic-select" class="form-select" style="flex: 1;"></select>
+                            <button id="init-audio-btn" class="btn" style="padding: 0 10px; min-width: auto;" title="Initialize Audio">Init</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="speaker-select">Select Speaker</label>

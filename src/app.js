@@ -87,6 +87,25 @@ class StreamDeckGeminiApp {
             micSelect.addEventListener('change', () => localStorage.setItem('selected_mic', micSelect.value));
             speakerSelect.addEventListener('change', () => localStorage.setItem('selected_speaker', speakerSelect.value));
             
+            // Manual Audio Init
+            const initAudioBtn = document.getElementById('init-audio-btn');
+            if (initAudioBtn) {
+                initAudioBtn.addEventListener('click', async () => {
+                    const micId = micSelect.value;
+                    try {
+                        this.log('Initializing Audio...');
+                        await this.audioManager.initialize(micId);
+                        if (this.visualizer && this.audioManager.analyser) {
+                            this.visualizer.setAnalyser(this.audioManager.analyser);
+                        }
+                        this.log('Audio Initialized');
+                    } catch (e) {
+                        this.log(`Audio Init Failed: ${e.message}`);
+                        console.error(e);
+                    }
+                });
+            }
+
         } catch (error) {
             console.error('Error setting up audio devices:', error);
             this.log(`Audio Setup Error: ${error.message}`);
