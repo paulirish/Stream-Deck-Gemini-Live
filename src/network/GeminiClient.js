@@ -19,6 +19,7 @@ export class GeminiClient extends EventTarget {
         this.session = null;
         this.isConnected = false;
         this.model = 'gemini-2.5-flash-native-audio-preview-09-2025';
+        this.silenceTimer = null;
     }
 
 
@@ -118,6 +119,52 @@ export class GeminiClient extends EventTarget {
                 mimeType: "audio/pcm;rate=16000"
             }
         });
+    }
+
+    /**
+     * Sends a sequence of silence packets to the model.
+     * Useful for triggering VAD (Voice Activity Detection) end-of-speech
+     * when the input stream is cut off abruptly (e.g. PTT release).
+     * @param {number} totalDurationMs Total duration in milliseconds (default 500ms)
+     * @param {number} packetDurationMs Duration of each packet (default 100ms)
+     */
+    sendSilence(totalDurationMs = 600, packetDurationMs = 100) {
+        this.cancelSilence();
+
+        if (!this.isConnected || !this.session) return;
+        
+        const sampleRate = 16000;
+        // Calculate number of samples per packet
+        const packetSamples = Math.floor(sampleRate * (packetDurationMs / 1000));
+        // Create buffer (2 bytes per sample for 16-bit PCM)
+        const buffer = new ArrayBuffer(packetSamples * 2);
+        
+        const iterations = Math.ceil(totalDurationMs / packetDurationMs);
+        let count = 0;
+
+        // Send first packet immediately
+        this.sendAudio(buffer);
+        count++;
+
+        this.silenceTimer = setInterval(() => {
+            if (count >= iterations) {
+                this.cancelSilence();
+                return;
+            }
+            if (!this.isConnected || !this.session) {
+                this.cancelSilence();
+                return;
+            }
+            this.sendAudio(buffer);
+            count++;
+        }, packetDurationMs);
+    }
+
+    cancelSilence() {
+        if (this.silenceTimer) {
+            clearInterval(this.silenceTimer);
+            this.silenceTimer = null;
+        }
     }
 
     send(data) {
