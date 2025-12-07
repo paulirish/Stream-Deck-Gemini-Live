@@ -173,6 +173,33 @@ button.disconnect-active {
     border: 1px solid #333;
 }
 
+.key-preview-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.2s ease;
+}
+
+.key-preview-wrapper.hover {
+    opacity: 0.8;
+}
+
+.key-preview-image {
+    width: 72px;
+    height: 72px;
+    border: 1px solid #555;
+    border-radius: 8px;
+}
+
+.key-preview-label {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #ccc;
+}
+
 .status-text {
     margin-left: 10px;
     font-weight: bold;

@@ -370,12 +370,15 @@ class StreamDeckGeminiApp {
         if (keyIndex === 0) {
             this.state.isPTTActive = isDown;
             if (isDown) {
+                if (!this.state.geminiConnected) {
+                    this.log('Warning: Gemini not connected. Audio will not be sent.');
+                }
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
-                // this.log('PTT Active (Listening...)');
+                this.log('PTT Active (Listening...)');
             } else {
                 this.audioManager.stopStreaming();
-                // this.log('PTT Inactive');
+                this.log('PTT Inactive');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
                 }
@@ -387,12 +390,15 @@ class StreamDeckGeminiApp {
         if (keyIndex === 1 && isDown) { // Toggle on press down
             this.state.isToggleActive = !this.state.isToggleActive;
             if (this.state.isToggleActive) {
+                if (!this.state.geminiConnected) {
+                    this.log('Warning: Gemini not connected. Audio will not be sent.');
+                }
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
-                // this.log('Mic Toggled ON');
+                this.log('Mic Toggled ON');
             } else {
                 this.audioManager.stopStreaming();
-                // this.log('Mic Toggled OFF');
+                this.log('Mic Toggled OFF');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
                 }
@@ -426,27 +432,15 @@ class StreamDeckGeminiApp {
         if (!wrapper) {
             wrapper = document.createElement('div');
             wrapper.dataset.key = String(keyIndex);
-            wrapper.style.display = 'flex';
-            wrapper.style.flexDirection = 'column';
-            wrapper.style.alignItems = 'center';
-            wrapper.style.cursor = 'pointer'; 
-            wrapper.style.userSelect = 'none'; 
-            wrapper.style.webkitUserSelect = 'none';
-            // Add slight hover effect via style or class? 
-            // Inline style is easiest for now
-            wrapper.onmouseover = () => wrapper.style.opacity = '0.8';
-            wrapper.onmouseout = () => wrapper.style.opacity = '1.0';
+            wrapper.classList.add('key-preview-wrapper');
+            wrapper.onmouseover = () => wrapper.classList.add('hover');
+            wrapper.onmouseout = () => wrapper.classList.remove('hover');
 
             const img = document.createElement('img');
-            img.style.width = '72px';
-            img.style.height = '72px';
-            img.style.border = '1px solid #555';
-            img.style.borderRadius = '8px';
+            img.classList.add('key-preview-image');
             
             const text = document.createElement('span');
-            text.style.fontSize = '12px';
-            text.style.marginTop = '4px';
-            text.style.color = '#ccc';
+            text.classList.add('key-preview-label');
 
             wrapper.appendChild(img);
             wrapper.appendChild(text);
@@ -534,7 +528,7 @@ class StreamDeckGeminiApp {
 
         // --- Plaintext Transcript ---
         // Only for user/model/model_thought
-        if (['user', 'model', 'model_thought'].includes(role)) {
+        if (['user', 'model'].includes(role)) {
             // Check if we should append to the last line of text
             // We can store the last active role in a property or check the text content
             // Easier to check if the text ends with a newline? 
