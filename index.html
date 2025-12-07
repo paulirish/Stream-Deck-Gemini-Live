@@ -23,6 +23,38 @@
         </header>
 
         <main class="app-main">
+
+            <!-- Main Content -->
+            <section class="content-area">
+                <!-- Waveform and Chat -->
+                <div class="chat-panel">
+                    <!-- Waveform Visualizer -->
+                    <div class="visualizer-container">
+                        <canvas id="audio-waveform" width="600" height="160"></canvas>
+                    </div>
+
+                    <!-- Visual Chat Log -->
+                    <div id="transcript-log" class="chat-log">
+                        <div class="session-start">
+                            <span>Session started</span>
+                        </div>
+                        <!-- Chat bubbles will be injected here -->
+                    </div>
+                    <footer>
+                        <div class="stat-item">
+                            <span class="stat-label">Token Usage:</span>
+                            <span id="token-count" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Estimated Cost:</span>
+                            <span id="cost-estimate" class="stat-value">$0.0000</span>
+                        </div>
+                    </footer>
+                </div>
+
+          
+            </section>
+
             <!-- Left Sidebar -->
             <aside class="sidebar">
                 <!-- Gemini API Controls -->
@@ -88,36 +120,6 @@
                         <select id="speaker-select" class="form-select"></select>
                     </div>
                 </div>
-            </aside>
-
-            <!-- Main Content -->
-            <section class="content-area">
-                <!-- Waveform and Chat -->
-                <div class="chat-panel">
-                    <!-- Waveform Visualizer -->
-                    <div class="visualizer-container">
-                        <canvas id="audio-waveform" width="600" height="160"></canvas>
-                    </div>
-
-                    <!-- Visual Chat Log -->
-                    <div id="transcript-log" class="chat-log">
-                        <div class="session-start">
-                            <span>Session started</span>
-                        </div>
-                        <!-- Chat bubbles will be injected here -->
-                    </div>
-                    <footer>
-                        <div class="stat-item">
-                            <span class="stat-label">Token Usage:</span>
-                            <span id="token-count" class="stat-value">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Estimated Cost:</span>
-                            <span id="cost-estimate" class="stat-value">$0.0000</span>
-                        </div>
-                    </footer>
-                </div>
-
                 <!-- Collapsible Transcript -->
                 <details id="transcript-details" class="transcript-details panel">
                     <summary>
@@ -128,15 +130,17 @@
                         <pre id="plaintext-log"></pre>
                     </div>
                 </details>
-            </section>
-        </main>
+            </aside>
 
+
+        </main>
+<!-- 
         <footer class="app-footer">
             <div class="test-links">
                 <a href="./tests/test-streamdeckv2.html">Test: Stream Deck V2 lib</a>
                 <a href="./tests/test-audio.html">Test: Audio</a>
             </div>
-        </footer>
+        </footer> -->
     </div>
 
     <script type="module" src="src/app.js"></script>

@@ -109,7 +109,7 @@ describe('AudioManager', () => {
     it('should initialize correctly', async () => {
         await audioManager.initialize();
         expect(audioManager.audioContext).to.be.instanceof(MockAudioContext);
-        expect(audioManager.audioContext.modulePath).to.equal('src/utils/audio-processor.js');
+        expect(audioManager.audioContext.modulePath).to.equal('/src/utils/audio-processor.js');
     });
 
     it('should emit audioinput events when streaming', async () => {
