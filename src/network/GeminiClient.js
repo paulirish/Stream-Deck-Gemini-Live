@@ -108,6 +108,9 @@ export class GeminiClient extends EventTarget {
      * @param {ArrayBuffer} pcmData 16-bit PCM, 16kHz, Mono
      */
     sendAudio(pcmData) {
+        return; 
+
+        
         if (!this.isConnected || !this.session) return;
 
         // Convert ArrayBuffer to Base64
@@ -128,7 +131,7 @@ export class GeminiClient extends EventTarget {
      * @param {number} totalDurationMs Total duration in milliseconds (default 500ms)
      * @param {number} packetDurationMs Duration of each packet (default 100ms)
      */
-    sendSilence(totalDurationMs = 900, packetDurationMs = 100) {
+    sendSilence(totalDurationMs = 600, packetDurationMs = 100) {
         this.cancelSilence();
 
         if (!this.isConnected || !this.session) return;
@@ -142,9 +145,14 @@ export class GeminiClient extends EventTarget {
         const iterations = Math.ceil(totalDurationMs / packetDurationMs);
         let count = 0;
 
+        const sendAndEmit = () => {
+             this.sendAudio(buffer);
+             this.dispatchEvent(new CustomEvent('silence', { detail: { durationMs: packetDurationMs } }));
+             count++;
+        };
+
         // Send first packet immediately
-        this.sendAudio(buffer);
-        count++;
+        sendAndEmit();
 
         this.silenceTimer = setInterval(() => {
             if (count >= iterations) {
@@ -155,8 +163,7 @@ export class GeminiClient extends EventTarget {
                 this.cancelSilence();
                 return;
             }
-            this.sendAudio(buffer);
-            count++;
+            sendAndEmit();
         }, packetDurationMs);
     }
 

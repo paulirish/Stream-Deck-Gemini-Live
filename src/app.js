@@ -170,6 +170,12 @@ class StreamDeckGeminiApp {
             this.updateTokenStats(/** @type {CustomEvent} */(e).detail);
         });
 
+        this.geminiClient.addEventListener('silence', (e) => {
+            if (this.visualizer) {
+                this.visualizer.pushSilence(/** @type {CustomEvent} */(e).detail.durationMs);
+            }
+        });
+
         // Fetch Models if API Key is available
         const storedKey = localStorage.getItem('gemini_api_key');
         // if (storedKey) {
@@ -387,9 +393,11 @@ class StreamDeckGeminiApp {
                 }
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
+                if (this.visualizer) this.visualizer.setStreaming(true);
                 this.log('PTT Active (Listening...)');
             } else {
                 this.audioManager.stopStreaming();
+                if (this.visualizer) this.visualizer.setStreaming(false);
                 this.log('PTT Inactive');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
@@ -407,9 +415,11 @@ class StreamDeckGeminiApp {
                 }
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
+                if (this.visualizer) this.visualizer.setStreaming(true);
                 this.log('Mic Toggled ON');
             } else {
                 this.audioManager.stopStreaming();
+                if (this.visualizer) this.visualizer.setStreaming(false);
                 this.log('Mic Toggled OFF');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
