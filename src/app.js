@@ -384,35 +384,62 @@ class StreamDeckGeminiApp {
     updateTokenStats(usage) {
         if (!usage) return;
         
-     
-        const tokenString = `
-    Prompt   : ${usage.promptTokensDetails.map(t => `${t.tokenCount.toLocaleString().padStart(9)} (${t.modality.toLowerCase()})`).join(', ')}
-    Response : ${usage.responseTokensDetails.map(t => `${t.tokenCount.toLocaleString().padStart(9)} (${t.modality.toLowerCase()})`).join(', ')}
-    Total    : ${usage.totalTokenCount.toLocaleString().padStart(9)}`.trim();
-        
         // see pricing-deets.md 
+        // Live API (2.5-flash-native-audio-preview-09-2025)
+        const RATES = { 
+            PROMPT: { TEXT: 0.50, AUDIO: 3.00 }, 
+            RESPONSE: { TEXT: 2.00, AUDIO: 12.00 } 
+        };
 
-        // gemini-2.0-flash-live-001
-        const inputTextCost = ((usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000)    * 0.35;
-        const outputTextCost = ((usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000) * 1.50;
-        const inputAudioCost = ((usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000)    * 2.10;
-        const outputAudioCost = ((usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000) * 8.50;
+        // Flash API (2.0-flash-exp)
+        // const RATES = { 
+        //     PROMPT: { TEXT: 0.35, AUDIO: 2.10 }, 
+        //     RESPONSE: { TEXT: 1.50, AUDIO: 8.50 } 
+        // };
 
-        // // Live API (2.5-flash-native-audio-preview-09-2025)
-        // const inputTextCost = ((usage.promptTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000)    * 0.50;
-        // const outputTextCost = ((usage.responseTokensDetails.find(t => t.modality === 'TEXT')?.tokenCount ?? 0) / 1_000_000) * 2.00;
-        // const inputAudioCost = ((usage.promptTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000)    * 3.00;
-        // const outputAudioCost = ((usage.responseTokensDetails.find(t => t.modality === 'AUDIO')?.tokenCount ?? 0) / 1_000_000) * 12.00;
+       // Flatten and calculate costs
+        const rows = [
+            ...usage.promptTokensDetails.map(d => ({ ...d, label: 'Input', rate: RATES.PROMPT[d.modality] })),
+            ...usage.responseTokensDetails.map(d => ({ ...d, label: 'Output', rate: RATES.RESPONSE[d.modality] }))
+        ].filter(d => d.tokenCount > 0)
+         .map(d => ({ ...d, cost: (d.tokenCount / 1e6) * d.rate }));
 
-        const totalCost = inputTextCost + outputTextCost + inputAudioCost + outputAudioCost;
-
-        const countEl = document.getElementById('token-count');
-        const costEl = document.getElementById('cost-estimate');
-
-        const formattedValue = Intl.NumberFormat('en', {currency: 'USD', style: 'currency', minimumFractionDigits: 4}).format(totalCost);
+        const totalCost = rows.reduce((acc, curr) => acc + curr.cost, 0);
         
-        if (countEl) countEl.textContent = tokenString;
-        if (costEl) costEl.textContent = formattedValue;
+        // Formatters
+        const num = n => n.toLocaleString('en-US');
+        const money = v => totalCost < 1 
+            ? `${(v * 100).toFixed(2)}¢` 
+            : v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 4 });
+
+
+          document.getElementById('token-stats').innerHTML = `
+            <table>
+                <tbody>
+                    <tr>
+                        <th></th>
+                        ${rows.map(r => `
+                            <td>
+                                <div class="item-cell" style="justify-content: flex-end">
+                                    ${r.label} <span class="badge ${r.modality.toLowerCase()}">${r.modality.toLowerCase()}</span>
+                                </div>
+                            </td>
+                        `).join('')}
+                        <td style="font-weight: 700">Total</td>
+                    </tr>
+                    <tr>
+                        <th>Tokens</th>
+                        ${rows.map(r => `<td>${num(r.tokenCount)}</td>`).join('')}
+                        <td style="font-weight: 700">${num(usage.totalTokenCount)}</td>
+                    </tr>
+                    <tr>
+                        <th>Cost</th>
+                        ${rows.map(r => `<td>${money(r.cost)}</td>`).join('')}
+                        <td style="font-weight: 700; background-color: #f1f5f924;">${money(totalCost)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
     }
 
     async handleButtonPress(keyIndex, isDown) {

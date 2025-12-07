@@ -469,12 +469,26 @@ footer {
     background-color: rgba(16, 19, 34, 0.8);
     backdrop-filter: blur(8px);
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     position: sticky;
     bottom: 0;
     z-index: 10;
+
+
+    font-size: 12px; 
+    --border: #e2e8f014;
+    --text-muted: #64748b;
 }
+
+table {border-collapse: collapse;/* font-size: 0.95rem; */}
+th, td {padding: 3px 12px;border-bottom: 1px solid var(--border);}
+th {background: var(--bg-head);text-align: left;font-size: 12px;text-transform: uppercase;color: var(--text-muted);}
+
+td:not(:first-child), th:not(:first-child) { text-align: right; }
+td { border-radius: 2px}
+
+
 
 .stat-item {
     display: flex;
