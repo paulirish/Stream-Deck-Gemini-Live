@@ -20,7 +20,7 @@ export class AudioManager extends EventTarget {
                 sampleRate: 16000,
             });
 
-            await this.audioContext.audioWorklet.addModule('/src/utils/audio-processor.js');
+            await this.audioContext.audioWorklet.addModule('src/utils/audio-processor.js');
 
             const constraints = {
                 audio: {
