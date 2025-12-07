@@ -82,7 +82,7 @@ export class AudioManager extends EventTarget {
                 .catch(err => {
                     console.error('[AudioManager] Context resume failed:', err);
                     this.dispatchEvent(new CustomEvent('warning', { 
-                        detail: { message: 'Audio autoplay blocked. Click "Init" in Audio Management or interact with the page.' } 
+                        detail: { message: 'Audio autoplay blocked. Click "Connect Gemini" to initialize.' } 
                     }));
                 });
         }

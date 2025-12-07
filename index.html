@@ -61,10 +61,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="button-group">
-                        <button id="connect-gemini" class="btn btn-primary">Connect Gemini</button>
-                    </div>
 
                     <div class="form-group">
                         <label for="voice-select">Select Voice</label>
@@ -77,9 +73,8 @@
                         </select>
                     </div>
 
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="auto-connect" checked>
-                        <label for="auto-connect">Auto-connect on startup</label>
+                    <div class="button-group">
+                        <button id="connect-gemini" class="btn btn-primary" title="Clicking this button is required to initialize the audio system (browser autoplay policy).">Connect Gemini</button>
                     </div>
                 </div>
 
@@ -105,10 +100,7 @@
                     <h2>Audio Management</h2>
                     <div class="form-group">
                         <label for="mic-select">Select Microphone</label>
-                        <div style="display: flex; gap: 8px;">
-                            <select id="mic-select" class="form-select" style="flex: 1;"></select>
-                            <button id="init-audio-btn" class="btn" style="padding: 0 10px; min-width: auto;" title="Initialize Audio">Init</button>
-                        </div>
+                        <select id="mic-select" class="form-select"></select>
                     </div>
                     <div class="form-group">
                         <label for="speaker-select">Select Speaker</label>

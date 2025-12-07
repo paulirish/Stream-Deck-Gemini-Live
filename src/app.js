@@ -30,7 +30,6 @@ class StreamDeckGeminiApp {
         await this.setupAudio();
         // Auto-connect Stream Deck if possible
         this.tryAutoConnect();
-        this.tryAutoConnectGemini();
     }
 
     async tryAutoConnect() {
@@ -41,15 +40,6 @@ class StreamDeckGeminiApp {
             }
         } catch (e) {
             console.log('Auto-connect failed:', e);
-        }
-    }
-
-    async tryAutoConnectGemini() {
-        const apiKey = localStorage.getItem('gemini_api_key');
-        if (apiKey) {
-            // Wait for the UI to be fully set up before attempting connection
-            await new Promise(resolve => setTimeout(resolve, 100)); 
-            this.toggleGeminiConnection();
         }
     }
 
@@ -87,25 +77,6 @@ class StreamDeckGeminiApp {
             micSelect.addEventListener('change', () => localStorage.setItem('selected_mic', micSelect.value));
             speakerSelect.addEventListener('change', () => localStorage.setItem('selected_speaker', speakerSelect.value));
             
-            // Manual Audio Init
-            const initAudioBtn = document.getElementById('init-audio-btn');
-            if (initAudioBtn) {
-                initAudioBtn.addEventListener('click', async () => {
-                    const micId = micSelect.value;
-                    try {
-                        this.log('Initializing Audio...');
-                        await this.audioManager.initialize(micId);
-                        if (this.visualizer && this.audioManager.analyser) {
-                            this.visualizer.setAnalyser(this.audioManager.analyser);
-                        }
-                        this.log('Audio Initialized');
-                    } catch (e) {
-                        this.log(`Audio Init Failed: ${e.message}`);
-                        console.error(e);
-                    }
-                });
-            }
-
         } catch (error) {
             console.error('Error setting up audio devices:', error);
             this.log(`Audio Setup Error: ${error.message}`);
