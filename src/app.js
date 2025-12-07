@@ -390,10 +390,10 @@ class StreamDeckGeminiApp {
             if (isDown) {
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
-                this.log('PTT Active (Listening...)');
+                // this.log('PTT Active (Listening...)');
             } else {
                 this.audioManager.stopStreaming();
-                this.log('PTT Inactive');
+                // this.log('PTT Inactive');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
                 }
@@ -407,10 +407,10 @@ class StreamDeckGeminiApp {
             if (this.state.isToggleActive) {
                 this.geminiClient.cancelSilence();
                 this.audioManager.startStreaming();
-                this.log('Mic Toggled ON');
+                // this.log('Mic Toggled ON');
             } else {
                 this.audioManager.stopStreaming();
-                this.log('Mic Toggled OFF');
+                // this.log('Mic Toggled OFF');
                 if (this.state.geminiConnected) {
                     this.geminiClient.sendSilence();
                 }
