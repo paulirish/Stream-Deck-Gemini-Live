@@ -67,10 +67,24 @@ export class AudioManager extends EventTarget {
     }
 
     startStreaming() {
-        // console.log('[AudioManager] startStreaming called. Context state:', this.audioContext?.state);
+        console.log('[AudioManager] startStreaming called. Context state:', this.audioContext?.state);
         this.isStreaming = true;
         if (this.audioContext && this.audioContext.state === 'suspended') {
-            this.audioContext.resume().then(() => console.log('[AudioManager] Context resumed'));
+            this.audioContext.resume()
+                .then(() => {
+                    console.log('[AudioManager] Context resumed');
+                    if (this.audioContext.state !== 'running') {
+                         this.dispatchEvent(new CustomEvent('warning', { 
+                            detail: { message: 'Audio Context is not running. Check permissions or interact with the page.' } 
+                        }));
+                    }
+                })
+                .catch(err => {
+                    console.error('[AudioManager] Context resume failed:', err);
+                    this.dispatchEvent(new CustomEvent('warning', { 
+                        detail: { message: 'Audio autoplay blocked. Please click on the page.' } 
+                    }));
+                });
         }
     }
 

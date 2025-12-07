@@ -98,6 +98,12 @@ class StreamDeckGeminiApp {
         const connectGeminiBtn = document.getElementById('connect-gemini');
         const apiKeyInput = /** @type {HTMLInputElement} */ (document.getElementById('api-key'));
         const brightnessSlider = /** @type {HTMLInputElement} */ (document.getElementById('brightness-slider'));
+        const voiceSelect = /** @type {HTMLSelectElement} */ (document.getElementById('voice-select'));
+
+        // Load saved Voice
+        const savedVoice = localStorage.getItem('gemini_voice');
+        if (savedVoice) voiceSelect.value = savedVoice;
+        voiceSelect.addEventListener('change', () => localStorage.setItem('gemini_voice', voiceSelect.value));
 
         // Load saved API Key
         const savedKey = localStorage.getItem('gemini_api_key');
@@ -140,6 +146,11 @@ class StreamDeckGeminiApp {
             if (this.state.geminiConnected) {
                 this.geminiClient.sendAudio(/** @type {CustomEvent} */(e).detail);
             }
+        });
+
+        // Listen for Audio Manager Warnings (e.g. Autoplay blocked)
+        this.audioManager.addEventListener('warning', (e) => {
+            this.log(`System: ${/** @type {CustomEvent} */(e).detail.message}`);
         });
 
         // Listen for Gemini Output (Gemini -> Speaker)

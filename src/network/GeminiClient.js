@@ -23,11 +23,16 @@ export class GeminiClient extends EventTarget {
     }
 
 
-    // /**
-    //  * Fetch available models from the Gemini API. there's basically 3 unique models available rn.
-    //  * @param {string} apiKey 
-    //  * @returns {Promise<Array<{name: string, displayName: string}>>}
-    //  */
+    /**
+     * Fetch available models from the Gemini API. there's basically 3 unique models available rn.
+     * 
+     * Also hypothetically `https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta&key=${apiKey}` was useful to us but it seems to exclude the bidi methods..
+     * oh!
+     * `https://generativelanguage.googleapis.com/$discovery/rest?version=v1alpha&key=${apiKey}`  is our buddy. figured out cuz the direct WS url was v1alpha:  `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent`;
+     * 
+     * @param {string} apiKey 
+     * @returns {Promise<Array<{name: string, displayName: string}>>}
+     */
     static async fetchModels(apiKey) {
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=200`);
