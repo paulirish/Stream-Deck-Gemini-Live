@@ -108,9 +108,6 @@ export class GeminiClient extends EventTarget {
      * @param {ArrayBuffer} pcmData 16-bit PCM, 16kHz, Mono
      */
     sendAudio(pcmData) {
-        return; 
-
-        
         if (!this.isConnected || !this.session) return;
 
         // Convert ArrayBuffer to Base64
@@ -128,10 +125,10 @@ export class GeminiClient extends EventTarget {
      * Sends a sequence of silence packets to the model.
      * Useful for triggering VAD (Voice Activity Detection) end-of-speech
      * when the input stream is cut off abruptly (e.g. PTT release).
-     * @param {number} totalDurationMs Total duration in milliseconds (default 500ms)
+     * @param {number} totalDurationMs Total duration in milliseconds.  even at 900ms we still need more i guess.
      * @param {number} packetDurationMs Duration of each packet (default 100ms)
      */
-    sendSilence(totalDurationMs = 600, packetDurationMs = 100) {
+    sendSilence(totalDurationMs = 1100, packetDurationMs = 100) {
         this.cancelSilence();
 
         if (!this.isConnected || !this.session) return;

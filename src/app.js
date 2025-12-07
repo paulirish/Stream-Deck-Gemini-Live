@@ -354,7 +354,7 @@ class StreamDeckGeminiApp {
         const tokenString = `
     Prompt   : ${usage.promptTokensDetails.map(t => `${t.tokenCount.toLocaleString().padStart(9)} (${t.modality.toLowerCase()})`).join(', ')}
     Response : ${usage.responseTokensDetails.map(t => `${t.tokenCount.toLocaleString().padStart(9)} (${t.modality.toLowerCase()})`).join(', ')}
-    Total    : ${usage.totalTokenCount.toLocaleString().padStart(9)}`;
+    Total    : ${usage.totalTokenCount.toLocaleString().padStart(9)}`.trim();
         
         // see pricing-deets.md 
 

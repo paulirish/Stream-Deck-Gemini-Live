@@ -1,47 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Deck Gemini Live</title>
+    <title>Gemini Stream Deck Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Stream Deck Gemini Live</h1>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <h1>Gemini Stream Deck Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="status-indicator"></div>
+                <span id="streamdeck-status" class="status-text">No Device</span>
+            </div>
         </header>
 
-        <main>
-            <section id="settings-panel">
-                <details>
-                    <summary>Settings</summary>
-                    
+        <main class="app-main">
+            <!-- Left Sidebar -->
+            <aside class="sidebar">
+                <!-- Gemini API Controls -->
+                <div class="panel">
+                    <h2>Gemini API</h2>
                     <div class="form-group">
                         <label for="api-key">Gemini API Key</label>
-                        <input type="password" id="api-key" placeholder="Enter your API Key">
+                        <div class="input-with-icon">
+                            <input type="password" id="api-key" placeholder="Enter your API Key" value="••••••••••••••••••••">
+                            <div class="icon-wrapper">
+                                <span class="material-symbols-outlined">key</span>
+                            </div>
+                        </div>
                     </div>
                     
-                                    <div class="form-group">
-                                        <label for="mic-select">Microphone</label>
-                                        <select id="mic-select"></select>
-                                    </div>
-                    
-                                 
-                                    <div class="settings-row">                        <label for="speaker-select">Speaker:</label>
-                        <select id="speaker-select"></select>
+                    <div class="button-group">
+                        <button id="connect-gemini" class="btn btn-primary">Connect Gemini</button>
                     </div>
 
-                    <!-- <div class="settings-row" style="margin-top: 10px;">
-                        <label for="model-select">Model</label>
-                        <select id="model-select">
-                            <option value="" disabled selected>Loading models...</option>
-                        </select>
-                    </div> -->
-
-                    <div class="settings-row" style="margin-top: 10px;">
-                        <label for="voice-select">Voice</label>
-                        <select id="voice-select">
+                    <div class="form-group">
+                        <label for="voice-select">Select Voice</label>
+                        <select id="voice-select" class="form-select">
                             <option value="Puck">Puck</option>
                             <option value="Charon">Charon</option>
                             <option value="Kore">Kore</option>
@@ -49,58 +52,92 @@
                             <option value="Aoede">Aoede</option>
                         </select>
                     </div>
-                    
-                    <div class="settings-row" style="margin-top: 10px;">
-                        <label for="brightness-slider">Stream Deck Brightness</label>
-                        <input type="range" id="brightness-slider" min="0" max="100" value="70" style="width: 100%;">
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="auto-connect" checked>
+                        <label for="auto-connect">Auto-connect on startup</label>
                     </div>
-                </details>
-
-
-                <div class="form-group" style="display: flex; gap: 10px;">
-                    <button id="connect-streamdeck">Connect Stream Deck</button>
-                    <button id="connect-gemini">Connect Gemini</button>
                 </div>
 
-                <div class="key-previews" id="key-previews" style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
-                    <!-- Canvases will be injected here -->
+                <!-- Stream Deck Controls -->
+                <div class="panel">
+                    <h2>Stream Deck</h2>
+                    <div class="button-group">
+                        <button id="connect-streamdeck" class="btn btn-primary">Connect Stream Deck</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brightness-slider">Device Brightness</label>
+                        <input type="range" id="brightness-slider" min="0" max="100" value="70" class="range-slider">
+                    </div>
+
+                    <div id="key-previews" class="key-grid">
+                        <!-- Key previews will be injected here -->
+                    </div>
                 </div>
-                <span id="streamdeck-status" class="status-text">No Device</span>
-            </section>
 
-
-            <canvas id="audio-waveform" width="600" height="60"></canvas>
-
-                    
-
-            <div class="settings-row" style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
-                <div id="token-stats" style="font-size: 0.9em; font-family: monospace;">
-                    <div>Tokens: <span id="token-count">0</span></div>
-                    <div>Cost: <span id="cost-estimate">0.0000</span></div>
+                <!-- Audio Management -->
+                <div class="panel">
+                    <h2>Audio Management</h2>
+                    <div class="form-group">
+                        <label for="mic-select">Select Microphone</label>
+                        <select id="mic-select" class="form-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="speaker-select">Select Speaker</label>
+                        <select id="speaker-select" class="form-select"></select>
+                    </div>
                 </div>
-            </div>
+            </aside>
 
-            <section id="transcript-panel">
-                <h2>Transcript</h2>
-                <div id="transcript-log"></div>
-                <details id="transcript-details">
-                    <summary>Plaintext Transcript</summary>
-                    <pre id="plaintext-log"></pre>
+            <!-- Main Content -->
+            <section class="content-area">
+                <!-- Waveform and Chat -->
+                <div class="chat-panel">
+                    <!-- Waveform Visualizer -->
+                    <div class="visualizer-container">
+                        <canvas id="audio-waveform" width="600" height="160"></canvas>
+                    </div>
+
+                    <!-- Visual Chat Log -->
+                    <div id="transcript-log" class="chat-log">
+                        <div class="session-start">
+                            <span>Session started</span>
+                        </div>
+                        <!-- Chat bubbles will be injected here -->
+                    </div>
+                    <footer>
+                        <div class="stat-item">
+                            <span class="stat-label">Token Usage:</span>
+                            <span id="token-count" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Estimated Cost:</span>
+                            <span id="cost-estimate" class="stat-value">$0.0000</span>
+                        </div>
+                    </footer>
+                </div>
+
+                <!-- Collapsible Transcript -->
+                <details id="transcript-details" class="transcript-details panel">
+                    <summary>
+                        <h3>Plaintext transcript</h3>
+                        <span class="material-symbols-outlined expand-icon">expand_more</span>
+                    </summary>
+                    <div class="transcript-content">
+                        <pre id="plaintext-log"></pre>
+                    </div>
                 </details>
             </section>
         </main>
+
+        <footer class="app-footer">
+            <div class="test-links">
+                <a href="./tests/test-streamdeckv2.html">Test: Stream Deck V2 lib</a>
+                <a href="./tests/test-audio.html">Test: Audio</a>
+            </div>
+        </footer>
     </div>
-
-
-
-
-    <footer>
-        Tests:
-        <ul>
-            <li><a href="./tests/test-streamdeckv2.html">Test: Stream Deck V2 lib</a></li>
-            <li><a href="./tests/test-audio.html">Test: Audio</a></li>
-        </ul>
-    </footer>
 
     <script type="module" src="src/app.js"></script>
 </body>
