@@ -10,6 +10,9 @@ export class AudioManager extends EventTarget {
     }
 
     async initialize(micId = 'default') {
+        // Cleanup previous session if active
+        this.stop();
+
         try {
             // Create AudioContext. We try to force 16kHz to match Gemini requirements
             // and avoid manual downsampling complexity.
@@ -33,6 +36,12 @@ export class AudioManager extends EventTarget {
             this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
             const source = this.audioContext.createMediaStreamSource(this.mediaStream);
             
+            // Setup Analyser for visualization
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 2048;
+            this.analyser.smoothingTimeConstant = 0.8;
+            source.connect(this.analyser);
+
             this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
             
             this.workletNode.port.onmessage = (event) => {

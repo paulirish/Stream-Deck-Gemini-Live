@@ -4,6 +4,7 @@ import { StreamDeckV2 } from './lib/streamdeckv2.js';
 import { AudioManager } from './managers/AudioManager.js';
 import { GeminiClient } from './network/GeminiClient.js';
 import { IconGenerator } from './utils/icon-generator.js';
+import { WaveformVisualizer } from './ui/WaveformVisualizer.js';
 
 class StreamDeckGeminiApp {
     constructor() {
@@ -11,6 +12,7 @@ class StreamDeckGeminiApp {
         this.audioManager = new AudioManager();
         this.geminiClient = new GeminiClient();
         this.iconGenerator = new IconGenerator();
+        this.visualizer = null;
         
         // App State
         this.state = {
@@ -101,6 +103,12 @@ class StreamDeckGeminiApp {
         const savedKey = localStorage.getItem('gemini_api_key');
         if (savedKey) apiKeyInput.value = savedKey;
         apiKeyInput.addEventListener('change', () => localStorage.setItem('gemini_api_key', apiKeyInput.value));
+
+        // Initialize Visualizer
+        const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('audio-waveform'));
+        if (canvas) {
+            this.visualizer = new WaveformVisualizer(canvas);
+        }
 
         GeminiClient.fetchModels(apiKeyInput.value).then(models => {
             console.log('Models:', models);
@@ -301,6 +309,10 @@ class StreamDeckGeminiApp {
         const micId = micSelect.value;
         await this.audioManager.initialize(micId);
         
+        if (this.visualizer && this.audioManager.analyser) {
+            this.visualizer.setAnalyser(this.audioManager.analyser);
+        }
+
         this.state.connected = true;
         this.updateStatus('Connected & Live', 'live');
         

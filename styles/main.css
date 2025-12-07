@@ -77,6 +77,15 @@ button.disconnect-active {
     background-color: var(--disconnect-button-color);
 }
 
+#audio-waveform {
+    width: 100%;
+    height: 60px;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    display: block;
+}
+
 #transcript-log {
     background-color: #222;
     border: 1px solid #333;
@@ -192,6 +201,7 @@ button.disconnect-active {
     height: 72px;
     border: 1px solid #555;
     border-radius: 8px;
+    rotate: 180deg; /* because weird streamdeck thing */
 }
 
 .key-preview-label {
