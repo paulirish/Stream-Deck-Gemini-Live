@@ -14,57 +14,48 @@
 
         <main>
             <section id="settings-panel">
-                <h2>Settings</h2>
-                <div class="form-group">
-                    <label for="api-key">Gemini API Key</label>
-                    <input type="password" id="api-key" placeholder="Enter your API Key">
-                </div>
-                
-                <div class="form-group">
-                    <label for="mic-select">Microphone</label>
-                    <select id="mic-select"></select>
-                </div>
-
-                <div class="settings-row">
-                    <label for="speaker-select">Speaker:</label>
-                    <select id="speaker-select"></select>
-                </div>
-
-                <!-- <div class="settings-row" style="margin-top: 10px;">
-                    <label for="model-select">Model</label>
-                    <select id="model-select">
-                        <option value="" disabled selected>Loading models...</option>
-                    </select>
-                </div> -->
-
-                <div class="settings-row" style="margin-top: 10px;">
-                    <label for="voice-select">Voice</label>
-                    <select id="voice-select">
-                        <option value="Puck">Puck</option>
-                        <option value="Charon">Charon</option>
-                        <option value="Kore">Kore</option>
-                        <option value="Fenrir">Fenrir</option>
-                        <option value="Aoede">Aoede</option>
-                    </select>
-                </div>
-
-                <div class="settings-row" style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
-                    <div id="token-stats" style="font-size: 0.9em; font-family: monospace;">
-                        <div>Tokens: <span id="token-count">0</span></div>
-                        <div>Cost: <span id="cost-estimate">0.0000</span></div>
+                <details>
+                    <summary>Settings</summary>
+                    
+                    <div class="form-group">
+                        <label for="api-key">Gemini API Key</label>
+                        <input type="password" id="api-key" placeholder="Enter your API Key">
                     </div>
-                </div>
-                
-                <div class="settings-row" style="margin-top: 10px;">
-                    <label for="brightness-slider">Stream Deck Brightness</label>
-                    <input type="range" id="brightness-slider" min="0" max="100" value="70" style="width: 100%;">
-                </div>
+                    
+                    <div class="form-group">
+                        <label for="mic-select">Microphone</label>
+                        <select id="mic-select"></select>
+                    </div>
 
-                <div class="settings-row" style="margin-top: 10px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="debug-mode"> Debug Mode (Verbose Logs)
-                    </label>
-                </div>
+                    <div class="settings-row">
+                        <label for="speaker-select">Speaker:</label>
+                        <select id="speaker-select"></select>
+                    </div>
+
+                    <!-- <div class="settings-row" style="margin-top: 10px;">
+                        <label for="model-select">Model</label>
+                        <select id="model-select">
+                            <option value="" disabled selected>Loading models...</option>
+                        </select>
+                    </div> -->
+
+                    <div class="settings-row" style="margin-top: 10px;">
+                        <label for="voice-select">Voice</label>
+                        <select id="voice-select">
+                            <option value="Puck">Puck</option>
+                            <option value="Charon">Charon</option>
+                            <option value="Kore">Kore</option>
+                            <option value="Fenrir">Fenrir</option>
+                            <option value="Aoede">Aoede</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-row" style="margin-top: 10px;">
+                        <label for="brightness-slider">Stream Deck Brightness</label>
+                        <input type="range" id="brightness-slider" min="0" max="100" value="70" style="width: 100%;">
+                    </div>
+                </details>
+
 
                 <div class="form-group" style="display: flex; gap: 10px;">
                     <button id="connect-streamdeck">Connect Stream Deck</button>
@@ -77,9 +68,20 @@
                 <span id="streamdeck-status" class="status-text">No Device</span>
             </section>
 
+            <div class="settings-row" style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                <div id="token-stats" style="font-size: 0.9em; font-family: monospace;">
+                    <div>Tokens: <span id="token-count">0</span></div>
+                    <div>Cost: <span id="cost-estimate">0.0000</span></div>
+                </div>
+            </div>
+
             <section id="transcript-panel">
                 <h2>Transcript</h2>
                 <div id="transcript-log"></div>
+                <details id="transcript-details">
+                    <summary>Plaintext Transcript</summary>
+                    <pre id="plaintext-log"></pre>
+                </details>
             </section>
         </main>
     </div>

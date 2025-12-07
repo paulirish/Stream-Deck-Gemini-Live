@@ -128,7 +128,7 @@ export class GeminiClient extends EventTarget {
      * @param {number} totalDurationMs Total duration in milliseconds (default 500ms)
      * @param {number} packetDurationMs Duration of each packet (default 100ms)
      */
-    sendSilence(totalDurationMs = 600, packetDurationMs = 100) {
+    sendSilence(totalDurationMs = 900, packetDurationMs = 100) {
         this.cancelSilence();
 
         if (!this.isConnected || !this.session) return;

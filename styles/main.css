@@ -80,11 +80,97 @@ button.disconnect-active {
 #transcript-log {
     background-color: #222;
     border: 1px solid #333;
-    height: 300px;
+    height: 400px;
     overflow-y: auto;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-row {
+    display: flex;
+    width: 100%;
+}
+
+.chat-row.user {
+    justify-content: flex-end;
+}
+
+.chat-row.model {
+    justify-content: flex-start;
+}
+
+.chat-row.system {
+    justify-content: center;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 16px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.4;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.chat-row.user .chat-bubble {
+    background-color: var(--accent-color);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-row.model .chat-bubble {
+    background-color: #383838;
+    color: #e0e0e0;
+    border-bottom-left-radius: 4px;
+}
+
+.chat-row.model.thought .chat-bubble {
+    background-color: #2d2d2d;
+    color: #aaa;
+    font-style: italic;
+    border: 1px solid #444;
+}
+
+.chat-row.system .message {
+    color: #888;
+    font-size: 12px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.brain-icon {
+    margin-right: 8px;
+    font-style: normal;
+}
+
+#transcript-details {
+    margin-top: 10px;
+    color: #888;
+}
+
+#transcript-details summary {
+    cursor: pointer;
+    font-size: 0.9em;
+    user-select: none;
+    margin-bottom: 8px;
+}
+
+#plaintext-log {
+    background: #111;
     padding: 10px;
     border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre-wrap;
     font-family: monospace;
+    font-size: 13px;
+    color: #ccc;
+    border: 1px solid #333;
 }
 
 .status-text {

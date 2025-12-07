@@ -95,7 +95,6 @@ class StreamDeckGeminiApp {
         const connectDeckBtn = document.getElementById('connect-streamdeck');
         const connectGeminiBtn = document.getElementById('connect-gemini');
         const apiKeyInput = /** @type {HTMLInputElement} */ (document.getElementById('api-key'));
-        const debugCheckbox = /** @type {HTMLInputElement} */ (document.getElementById('debug-mode'));
         const brightnessSlider = /** @type {HTMLInputElement} */ (document.getElementById('brightness-slider'));
 
         // Load saved API Key
@@ -118,15 +117,6 @@ class StreamDeckGeminiApp {
                     this.deck.setBrightness(val);
                 }
                 localStorage.setItem('streamdeck_brightness', String(val));
-            });
-        }
-
-        // Debug Mode Toggle
-        if (debugCheckbox) {
-            debugCheckbox.addEventListener('change', () => {
-                // StreamDeckV2 doesn't have a public debugMode property, 
-                // but we can log events manually if needed.
-                this.log(`Debug Mode: ${debugCheckbox.checked ? 'ON' : 'OFF'}`);
             });
         }
 
@@ -165,15 +155,7 @@ class StreamDeckGeminiApp {
 
         this.geminiClient.addEventListener('transcription', (e) => {
             const { role, text } = /** @type {CustomEvent} */(e).detail;
-            const transcript = document.getElementById('transcript-log');
-            const lastEntry = transcript.lastElementChild;
-
-            if (lastEntry && lastEntry.textContent.includes(`] ${role}: `)) {
-                lastEntry.textContent += text;
-                transcript.scrollTop = transcript.scrollHeight;
-            } else {
-                this.log(`${role}: ${text}`);
-            }
+            this.appendChat(role, text);
         });
 
         this.geminiClient.addEventListener('usage', (e) => {
@@ -496,11 +478,96 @@ class StreamDeckGeminiApp {
         });
     }
 
+    appendChat(role, text) {
+        const transcript = document.getElementById('transcript-log');
+        const plaintextLog = document.getElementById('plaintext-log');
+        
+        // --- Visual Transcript ---
+        const lastRow = transcript.lastElementChild;
+        let bubble;
+
+        // Determine if we can append to the last message
+        // We match if the last row exists, has the same role, and for 'model' roles, 
+        // we generally group them unless switching between thought and response.
+        const canGroup = lastRow && lastRow.dataset.role === role;
+
+        if (canGroup) {
+            bubble = lastRow.querySelector('.chat-bubble') || lastRow.querySelector('.message');
+            if (role === 'model_thought' && !bubble.innerHTML.includes('brain-icon')) {
+                 // Should have icon, but if we are appending, it's already there
+            }
+            // For text nodes, we just append
+            // Use textContent for safety, but for thoughts we might have HTML (icon)
+            // So for thoughts, we append a text node
+            bubble.appendChild(document.createTextNode(text));
+        } else {
+            // Create new row
+            const row = document.createElement('div');
+            row.className = `chat-row ${role === 'model_thought' ? 'model thought' : role}`;
+            row.dataset.role = role;
+
+            if (role === 'user' || role === 'model' || role === 'model_thought') {
+                bubble = document.createElement('div');
+                bubble.className = 'chat-bubble';
+                
+                if (role === 'model_thought') {
+                    const icon = document.createElement('span');
+                    icon.className = 'brain-icon';
+                    icon.textContent = '🧠'; // Brain icon
+                    bubble.appendChild(icon);
+                }
+                
+                bubble.appendChild(document.createTextNode(text));
+                row.appendChild(bubble);
+            } else {
+                // Fallback for unknown roles, treat as system/center
+                const msg = document.createElement('div');
+                msg.className = 'message';
+                msg.textContent = text;
+                row.appendChild(msg);
+            }
+            
+            transcript.appendChild(row);
+        }
+        
+        transcript.scrollTop = transcript.scrollHeight;
+
+        // --- Plaintext Transcript ---
+        // Only for user/model/model_thought
+        if (['user', 'model', 'model_thought'].includes(role)) {
+            // Check if we should append to the last line of text
+            // We can store the last active role in a property or check the text content
+            // Easier to check if the text ends with a newline? 
+            // Actually, the prompt says "Retain the lastEntry role logic".
+            
+            // We'll track the last appended role for plaintext separately to ensure sync
+            if (this._lastPlaintextRole === role) {
+                plaintextLog.appendChild(document.createTextNode(text));
+            } else {
+                // New block
+                if (plaintextLog.textContent.length > 0) {
+                    plaintextLog.appendChild(document.createTextNode('\n'));
+                }
+                const label = role === 'model_thought' ? 'Thought' : (role.charAt(0).toUpperCase() + role.slice(1));
+                plaintextLog.appendChild(document.createTextNode(`[${label}]: ${text}`));
+                this._lastPlaintextRole = role;
+            }
+        }
+    }
+
     log(message) {
         const transcript = document.getElementById('transcript-log');
-        const entry = document.createElement('div');
-        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-        transcript.appendChild(entry);
+        
+        const row = document.createElement('div');
+        row.className = 'chat-row system';
+        // row.dataset.role = 'system'; // Optional, helps with logic if we wanted to group system messages
+
+        const msg = document.createElement('div');
+        msg.className = 'message';
+        msg.textContent = message; // System messages usually don't need streaming updates
+        
+        row.appendChild(msg);
+        transcript.appendChild(row);
         transcript.scrollTop = transcript.scrollHeight;
     }
 }
